@@ -1564,7 +1564,7 @@ class Inventor:
                 manhole_cover_mate_2 = main_assy_def.Constraints.AddMateConstraint(manhole_stump_xy_plane_proxy, manhole_cover_xy_plane_proxy, 0, 24833, 24833, None, None)
                 manhole_cover_flush_1 = main_assy_def.Constraints.AddFlushConstraint(manhole_cover_xz_plane_proxy, gasket_ref_plane_2, 0, None, None)
 
-
+                print("manhole_cover end")
 
                 
 

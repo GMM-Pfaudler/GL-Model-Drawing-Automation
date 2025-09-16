@@ -6,6 +6,8 @@
 
 # Fast API - Backend
 /gl-reactor-rest/glenv
+**/__pycache__/
+*.py[cod]
 
 # Dot Net - Vault API
 /gl-vault-api/.vs
