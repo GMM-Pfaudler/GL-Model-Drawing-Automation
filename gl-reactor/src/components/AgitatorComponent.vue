@@ -247,7 +247,6 @@ export default {
 
     onMounted(() => {
         console.log("Agitator")
-        console.log("Agitator")
     });
 
     const onUpdateHastalloySleeve = () => {
