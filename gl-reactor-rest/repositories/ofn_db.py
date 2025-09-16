@@ -1,15 +1,20 @@
 import json
 import mysql.connector
+from dotenv import load_dotenv
+import os
 
 class OFNDB:
     def __init__(self):
           self.connection = self.connect_to_db()
      
     def connect_to_db(self):
-        # Define MySQL connection parameters
-        host = 'KO-GMMPFW0046'  # or the IP address of your MySQL server
-        user = 'root'  # replace with your MySQL username
-        password = 'root'  # replace with your MySQL password
+        # Load environment variables from .env file
+        load_dotenv()
+
+        # Retrieve credentials from environment
+        host = os.getenv('HOST')
+        user = os.getenv('USER')
+        password = os.getenv('PASSWORD')
 
         # Connect to MySQL
         connection = mysql.connector.connect(

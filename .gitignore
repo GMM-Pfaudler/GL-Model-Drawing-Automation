@@ -6,6 +6,7 @@
 
 # Fast API - Backend
 /gl-reactor-rest/glenv
+/gl-reactor-rest/.env
 **/__pycache__/
 *.py[cod]
 
