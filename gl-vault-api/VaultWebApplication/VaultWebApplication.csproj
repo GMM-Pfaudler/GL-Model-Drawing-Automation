@@ -1,0 +1,103 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<None Remove="Autodesk.Connectivity.IDServicesWrapper.dll" />
+		<None Remove="SDK Ref\Core\AdskIdentitySDK.config" />
+		<None Remove="SDK Ref\Core\AdskIdentitySDK.dll" />
+		<None Remove="SDK Ref\Core\AdskLicensingSDK_8.dll" />
+		<None Remove="SDK Ref\Core\Autodesk.Connectivity.IDServicesWrapper.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.Data.Desktop.v22.2.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.Data.v22.2.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.Drawing.v22.2.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.Images.v22.2.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.Office.v22.2.Core.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.Pdf.v22.2.Core.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.Pdf.v22.2.Drawing.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.Printing.v22.2.Core.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.RichEdit.v22.2.Core.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.Sparkline.v22.2.Core.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.Utils.v22.2.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.XtraBars.v22.2.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.XtraEditors.v22.2.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.XtraGrid.v22.2.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.XtraLayout.v22.2.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.XtraNavBar.v22.2.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.XtraPrinting.v22.2.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.XtraRichEdit.v22.2.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.XtraTreeList.v22.2.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.XtraVerticalGrid.v22.2.dll" />
+		<None Remove="SDK Ref\Core\DevExpress.XtraWizard.v22.2.dll" />
+		<None Remove="SDK Ref\Core\Ijwhost.dll" />
+	</ItemGroup>
+    <ItemGroup>
+	  <Folder Include="SDK Ref\Core\" />
+    </ItemGroup>
+	<ItemGroup>
+		<Reference Include="Autodesk.Connectivity.Explorer.Extensibility">
+		  <HintPath>E:\Ketan\Projects\VaultGrpcService\VaultGrpcService\SDK Ref\Core\Autodesk.Connectivity.Explorer.Extensibility.dll</HintPath>
+		</Reference>
+		<Reference Include="Autodesk.Connectivity.Explorer.ExtensibilityTools">
+		  <HintPath>E:\Ketan\Projects\VaultGrpcService\VaultGrpcService\SDK Ref\Core\Autodesk.Connectivity.Explorer.ExtensibilityTools.dll</HintPath>
+		</Reference>
+		<Reference Include="Autodesk.Connectivity.Extensibility.Framework">
+			<HintPath>SDK Ref\Core\Autodesk.Connectivity.Extensibility.Framework.dll</HintPath>
+		</Reference>
+		<Reference Include="Autodesk.Connectivity.IDServicesWrapper">
+			<HintPath>SDK Ref\Core\Autodesk.Connectivity.IDServicesWrapper.dll</HintPath>
+			<Private>True</Private>
+		</Reference>
+		<Reference Include="Autodesk.Connectivity.JobProcessor.Extensibility">
+		  <HintPath>E:\Ketan\Projects\VaultGrpcService\VaultGrpcService\SDK Ref\Core\Autodesk.Connectivity.JobProcessor.Extensibility.dll</HintPath>
+		</Reference>
+		<Reference Include="Autodesk.Connectivity.LicenseWrapper">
+			<HintPath>SDK Ref\Core\Autodesk.Connectivity.LicenseWrapper.dll</HintPath>
+		</Reference>
+		<Reference Include="Autodesk.Connectivity.WebServices">
+			<HintPath>SDK Ref\Core\Autodesk.Connectivity.WebServices.dll</HintPath>
+		</Reference>
+		<Reference Include="Autodesk.Connectivity.WebServices.WCF">
+			<HintPath>SDK Ref\Core\Autodesk.Connectivity.WebServices.WCF.dll</HintPath>
+		</Reference>
+		<Reference Include="Autodesk.DataManagement.Client.Framework">
+			<HintPath>SDK Ref\Core\Autodesk.DataManagement.Client.Framework.dll</HintPath>
+		</Reference>
+		<Reference Include="Autodesk.DataManagement.Client.Framework.Forms">
+			<HintPath>SDK Ref\Core\Autodesk.DataManagement.Client.Framework.Forms.dll</HintPath>
+		</Reference>
+		<Reference Include="Autodesk.DataManagement.Client.Framework.Vault">
+			<HintPath>SDK Ref\Core\Autodesk.DataManagement.Client.Framework.Vault.dll</HintPath>
+		</Reference>
+		<Reference Include="Autodesk.DataManagement.Client.Framework.Vault.Forms">
+			<HintPath>SDK Ref\Core\Autodesk.DataManagement.Client.Framework.Vault.Forms.dll</HintPath>
+		</Reference>
+		<Reference Include="Autodesk.DataManagement.Server.Extensibility">
+		  <HintPath>E:\Ketan\Projects\VaultGrpcService\VaultGrpcService\SDK Ref\Core\Autodesk.DataManagement.Server.Extensibility.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup>
+		<None Update="AdskIdentitySDK.config">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="AdskIdentitySDK.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="AdskLicensingSDK_8.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Ijwhost.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+</Project>

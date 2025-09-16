@@ -1,0 +1,14 @@
+# Vue - Frontend
+/gl-reactor/.quasar
+/gl-reactor/.vscode
+/gl-reactor/dist
+/gl-reactor/node_modules
+
+# Fast API - Backend
+/gl-reactor-rest/glenv
+
+# Dot Net - Vault API
+/gl-vault-api/.vs
+/gl-vault-api/VaultWebApplication/bin
+/gl-vault-api/VaultWebApplication/obj
+/gl-vault-api/VaultWebApplication/SDK Ref
