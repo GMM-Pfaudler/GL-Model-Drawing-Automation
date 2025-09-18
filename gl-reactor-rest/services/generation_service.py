@@ -102,7 +102,8 @@ class Generation:
                                 {'comp': 'manhole_gasket_1', 'partnumber': '', 'member': '', 'itemcode':'T1-0086'},
                                 {'comp': 'bush_type_protection_ring', 'partnumber': '', 'member': '', 'itemcode':'T5B0579'},
                                 {'comp': 'manhole_gasket_2', 'partnumber': '', 'member': '', 'itemcode':'T1-0086'},
-                                {'comp': 'manhole_cover', 'partnumber': '', 'member': '', 'itemcode':'7053-0115'}]
+                                {'comp': 'manhole_cover', 'partnumber': '', 'member': '', 'itemcode':'7053-0115'},
+                                {'comp': 'manhole_c_clamp', 'partnumber': '', 'member': '', 'itemcode':'79010136'}]
                                 # {'comp': 'ms_coupling_bottom', 'partnumber': '96-GPF-7236', 'member': 'SA105_COUPLING_50L_96-GPF-7236-17834 R3', 'itemcode':''},
         downloaded_components_files = self.vault.find_files_by_item_codes(item_codes=component_item_codes)
         res = self.inventor.generate(components=downloaded_components_files)

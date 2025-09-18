@@ -1561,13 +1561,95 @@ class Inventor:
                 manhole_cover_xz_plane_proxy = manhole_cover.CreateGeometryProxy(manhole_cover.Definition.WorkPlanes["XZ Plane"])
                 
                 manhole_cover_mate_1 = main_assy_def.Constraints.AddMateConstraint2(manhole_stump_y_axis_proxy, manhole_cover_y_axis_proxy, 0, 24833, 24833, 115459, None, None)
-                manhole_cover_mate_2 = main_assy_def.Constraints.AddMateConstraint(manhole_stump_xy_plane_proxy, manhole_cover_xy_plane_proxy, 0, 24833, 24833, None, None)
+                manhole_cover_mate_2 = main_assy_def.Constraints.AddFlushConstraint(manhole_stump_xy_plane_proxy, manhole_cover_xy_plane_proxy, 0, None, None)
                 manhole_cover_flush_1 = main_assy_def.Constraints.AddFlushConstraint(manhole_cover_xz_plane_proxy, gasket_ref_plane_2, 0, None, None)
 
                 print("manhole_cover end")
+            
+            elif item.get("component") == 'manhole_c_clamp':
+                print("manhole_c_clamp start")
+                # y_axis = manhole_stump.Definition.WorkAxes["Y Axis"]
+                # xy_plane = manhole_stump.Definition.WorkPlanes["XY Plane"]
+                # origin_point = xy_plane.Plane.RootPoint
 
+                # y_vector = y_axis.Line.Direction  # Already a UnitVector
+                # z_vector = xy_plane.Plane.Normal  # Also a UnitVector
+
+                # x_vector = z_vector.CrossProduct(y_vector)  
+                # x_unit_vector = tg.CreateUnitVector(x_vector.X, x_vector.Y, x_vector.Z)
+
+                # rotation_matrix = tg.CreateMatrix()
+                # y_unit_vector = tg.CreateUnitVector(y_vector.X, y_vector.Y, y_vector.Z)
+                # rotation_matrix.SetToRotation(15.0, y_unit_vector, origin_point)
+
+                # rotated_x_vector = x_unit_vector.Copy()
+                # rotated_x_vector.TransformBy(rotation_matrix)
+
+                # work_planes = main_assy_def.WorkPlanes
+                # new_plane = work_planes.AddFixed(origin_point, rotated_x_vector, y_vector, False)
+
+                manhole_stump = self.find_occurrence_by_keyword_recursive(occurrences=monoblock.SubOccurrences, target_keyword="3817-0018")
+                # Get axis and plane
+                stump_y_axis_proxy = manhole_stump.CreateGeometryProxy(manhole_stump.Definition.WorkAxes["Y Axis"])
+                stump_xy_plane_proxy = manhole_stump.CreateGeometryProxy(manhole_stump.Definition.WorkPlanes["XY Plane"])
+                
+                pt = stump_xy_plane_proxy.Plane.RootPoint
+                manhole_stump_origin_point = tg.CreatePoint(float(pt.X), float(pt.Y), float(pt.Z))
+
+                y_vector = stump_y_axis_proxy.Line.Direction  # UnitVector
+                z_vector = stump_xy_plane_proxy.Plane.Normal  # UnitVector
+                x_vector = z_vector.CrossProduct(y_vector)
+
+                # Create COM-safe unit vector for X
+                x_unit_vector = tg.CreateUnitVector(float(x_vector.X), float(x_vector.Y), float(x_vector.Z))
+
+                # Convert Y axis direction to Vector for rotation (not UnitVector!)
+                y_vector_for_rotation = tg.CreateVector(float(y_vector.X), float(y_vector.Y), float(y_vector.Z))
+
+                # Create rotation matrix and apply 15° rotation around Y vector
+                rotation_matrix = tg.CreateMatrix()
+                angle_rad = math.radians(15.0)
+                rotation_matrix.SetToRotation(angle_rad, y_vector_for_rotation, manhole_stump_origin_point)
+
+                # Rotate X axis
+                rotated_x_vector = x_unit_vector.Copy()
+                rotated_x_vector.TransformBy(rotation_matrix)
+
+                # Create new work plane
+                work_planes = main_assy_def.WorkPlanes
+                C_CLAMP_PLANE_15DEGREE = work_planes.AddFixed(manhole_stump_origin_point, rotated_x_vector, y_vector, False)
+                C_CLAMP_PLANE_15DEGREE.Name = "C_CLAMP_PLANE_15DEGREE"
+                C_CLAMP_PLANE_15DEGREE.Grounded = True
+
+                # -----------------------------------------------------
+
+                # Create rotation matrix and apply 70° rotation around Y vector
+                rotation_matrix = tg.CreateMatrix()
+                angle_rad = math.radians(70.0)
+                rotation_matrix.SetToRotation(angle_rad, y_vector_for_rotation, manhole_stump_origin_point)
+
+                # Rotate X axis
+                rotated_x_vector = x_unit_vector.Copy()
+                rotated_x_vector.TransformBy(rotation_matrix)
+
+                # Create new work plane
+                work_planes = main_assy_def.WorkPlanes
+                C_CLAMP_PLANE_70DEGREE = work_planes.AddFixed(manhole_stump_origin_point, rotated_x_vector, y_vector, False)
+                C_CLAMP_PLANE_70DEGREE.Name = "C_CLAMP_PLANE_70DEGREE"
+                C_CLAMP_PLANE_70DEGREE.Grounded = True
+
+
+                manhole_c_clamp = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
+                manhole_c_clamp.Grounded = False
+
+                manhole_c_clamp_xy_plane_proxy = manhole_c_clamp.CreateGeometryProxy(manhole_c_clamp.Definition.WorkPlanes["XY Plane"])
+
+                manhole_c_clamp_mate1 = main_assy_def.Constraints.AddMateConstraint(manhole_c_clamp_xy_plane_proxy, C_CLAMP_PLANE_15DEGREE, 0, 24833, 24833, None, None)
+
+                j_bolt = self.find_occurrence_recursive(occurrences=manhole_c_clamp.SubOccurrences, target_name="02-GPF-11620 R4_C CLAMP J BOLT M24")
                 
 
+                print("manhole_c_clamp end")
 
 
         return True
