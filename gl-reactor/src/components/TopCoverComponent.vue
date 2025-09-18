@@ -1034,13 +1034,44 @@ export default {
     bovMasters: Object
   },
   emits: ['search-data', 'get-bov-masters'],
+  // mounted() {
+  //   if(this.topcover !== null){
+  //       this.fillData(this.topcover)
+  //   }
+  //   if(this.topcover?.data){
+  //       this.fillTopCoverData(this.tocover?.data)
+  //   }
+  //   this.getBovMastrers()
+  // },
+
   mounted() {
-    if(this.topcover !== null){
-        this.fillData(this.topcover)
+    const saved = localStorage.getItem('savedData:topCover')
+
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+
+        if (parsed?.topCover) {
+          this.fillFromLocalStorage(parsed.topCover)
+          this.getBovMastrers()
+          return // ✅ Skip the default fallback
+        } else {
+          console.warn('Invalid structure in savedData:topCover. Falling back.')
+        }
+      } catch (e) {
+        console.error('Error parsing savedData:topCover:', e)
+      }
     }
-    if(this.topcover?.data){
-        this.fillTopCoverData(this.tocover?.data)
+
+    // ✅ Fallback to props if no valid local data
+    if (this.topcover !== null) {
+      this.fillData(this.topcover)
     }
+
+    if (this.topcover?.data) {
+      this.fillTopCoverData(this.topcover.data)
+    }
+
     this.getBovMastrers()
   },
   setup (props, { emit }) {
@@ -1347,6 +1378,40 @@ export default {
         }
         const res = flattenForExcel(monoblcockData)
         return res
+    }
+
+    const fillFromLocalStorage = (data) => {
+      try {
+        id.value = data.id ?? null
+        topDishedEndThickness.value = data.topDishedEndThickness ?? null
+        spilageCollectionTray.value = data.spilageCollectionTray ?? null
+        insulationOnTop.value = data.insulationOnTop ?? null
+        liftingMOC.value = data.liftingMOC ?? null
+        modelType.value = data.modelType ?? null
+
+        nozzles.value.splice(0, nozzles.value.length) // Clear existing
+
+        Object.entries(data).forEach(([key, value]) => {
+          if (key.startsWith('nozzle_')) {
+            try {
+              const nozzle = JSON.parse(value)
+              nozzles.value.push({
+                nozzleNo: nozzle.nozzleNo,
+                size: nozzle.size,
+                location: nozzle.location,
+                drillingStandard: nozzle.drillingStandard,
+                degree: nozzle.degree,
+                radius: nozzle.radius,
+                fittings: nozzle.fittings
+              })
+            } catch (e) {
+              console.error(`Failed to parse nozzle from ${key}:`, e)
+            }
+          }
+        })
+      } catch (err) {
+        console.error('Error in fillFromLocalStorage (TopCover):', err)
+      }
     }
 
     const fillData = (data) => {
@@ -1950,6 +2015,7 @@ export default {
         removeFitting,
         searchTopCoverData,
         flattenForExcel,
+        fillFromLocalStorage,
         fillData,
         fillTopCoverData,
 

@@ -240,11 +240,45 @@ export default {
         populateInitialData
     }
   },
+  // watch: {
+  //   shaftclosureMasters: {
+  //     handler(newVal) {
+  //       if (newVal !== null && this.shaftclosure != null) {
+  //         this.populateInitialData(this.shaftclosure, newVal);
+  //       }
+  //     },
+  //     immediate: true
+  //   }
+  // }
+
   watch: {
     shaftclosureMasters: {
       handler(newVal) {
-        if (newVal !== null && this.shaftclosure != null) {
-          this.populateInitialData(this.shaftclosure, newVal);
+        if (newVal !== null) {
+          // First, populate options
+          const type = newVal.master_drive_shaft_type.map(item => item.name)
+          this.shaftclosureTypeOptions.splice(0, this.shaftclosureTypeOptions.length, ...type)
+
+          const make = newVal.master_drive_shaft_make.map(item => item.name)
+          this.shaftclosureMakeOptions.splice(0, this.shaftclosureMakeOptions.length, ...make)
+
+          const sealing = newVal.master_drive_shaft_sealing.map(item => item.name)
+          this.shaftclosureSealingOptions.splice(0, this.shaftclosureSealingOptions.length, ...sealing)
+
+          const housing = newVal.master_drive_shaft_housing.map(item => item.name)
+          this.shaftclosureHousingOptions.splice(0, this.shaftclosureHousingOptions.length, ...housing)
+
+          const inboard = newVal.master_drive_shaft_inborad.map(item => item.name)
+          this.shaftclosureInboardFaceOptions.splice(0, this.shaftclosureInboardFaceOptions.length, ...inboard)
+
+          const outboard = newVal.master_drive_shaft_outborad.map(item => item.name)
+          this.shaftclosureOutboardFaceOptions.splice(0, this.shaftclosureOutboardFaceOptions.length, ...outboard)
+
+          // Now, only populate values if localStorage is empty
+          const localData = localStorage.getItem('shaftClosureData')
+          if (!localData) {
+            this.populateInitialData(this.shaftclosure, newVal)
+          }
         }
       },
       immediate: true

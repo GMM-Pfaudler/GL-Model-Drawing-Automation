@@ -1027,13 +1027,44 @@ export default {
     bovMasters: Object
   },
   emits: ['search-data', 'get-bov-masters'],
+  // mounted() {
+  //   if(this.pan !== null){
+  //       this.fillData(this.pan)
+  //   }
+  //   if(this.pan?.data){
+  //       this.fillPanData(this.pan?.data)
+  //   }
+  //   this.getBovMastrers()
+  // },
+
   mounted() {
-    if(this.pan !== null){
-        this.fillData(this.pan)
+    const saved = localStorage.getItem('savedData:pan')
+
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+
+        if (parsed?.pan) {
+          this.fillFromLocalStorage(parsed.pan)
+          this.getBovMastrers()
+          return // ✅ Skip the default behavior
+        } else {
+          console.warn('Invalid structure in savedData:pan. Falling back to default.')
+        }
+      } catch (e) {
+        console.error('Error parsing savedData:pan:', e)
+      }
     }
-    if(this.pan?.data){
-        this.fillPanData(this.pan?.data)
+
+    // ✅ Default behavior if no valid local storage data
+    if (this.pan !== null) {
+      this.fillData(this.pan)
     }
+
+    if (this.pan?.data) {
+      this.fillPanData(this.pan.data)
+    }
+
     this.getBovMastrers()
   },
   setup (props, { emit }) {
@@ -1339,6 +1370,40 @@ export default {
         }
         const res = flattenForExcel(panData)
         return res
+    }
+
+    const fillFromLocalStorage = (data) => {
+      try {
+        id.value = data.id ? data.id : null
+        bottomDishedEndThickness.value = data.bottomDishedEndThickness ?? null
+        innerShellThickness.value = data.innerShellThickness ?? null
+        liftingMOC.value = data.liftingMOC ?? null
+        modelType.value = data.modelType ?? null
+
+        nozzles.value.splice(0, nozzles.value.length) // clear existing
+
+        // Dynamically get all "nozzle_*" keys
+        Object.entries(data).forEach(([key, value]) => {
+          if (key.startsWith('nozzle_')) {
+            try {
+              const nozzleData = JSON.parse(value)
+              nozzles.value.push({
+                nozzleNo: nozzleData.nozzleNo,
+                size: nozzleData.size,
+                location: nozzleData.location,
+                drillingStandard: nozzleData.drillingStandard,
+                degree: nozzleData.degree,
+                radius: nozzleData.radius,
+                fittings: nozzleData.fittings
+              })
+            } catch (e) {
+              console.error(`Failed to parse nozzle data from ${key}:`, e)
+            }
+          }
+        })
+      } catch (err) {
+        console.error('Error in fillFromLocalStorage:', err)
+      }
     }
 
     const fillData = (data) => {
@@ -1933,6 +1998,7 @@ export default {
         searchPanData,
         preparePanData,
         flattenForExcel,
+        fillFromLocalStorage,
         fillData,
         fillPanData,
 

@@ -24,9 +24,13 @@
             <q-space/>
             <q-btn outline rounded color="primary" icon="search" label="Search" @click="searchJacketData"/>
             <q-space/>
-            <q-chip  icon="check" square color="green-5" text-color="white" clickable @click="saveToJsonFile()">
+            <q-chip  icon="check" square color="green-5" text-color="white" clickable :disable="!showSaveToJsonButton" @click="saveToJsonFile()">
                 {{ "Save To File "}}
+                <q-tooltip v-if="!showSaveToJsonButton">
+                  Please complete all required drawing numbers and item codes.
+                </q-tooltip>
             </q-chip>
+
         </div>
     </div>
     <!-- Second Row -->
@@ -276,7 +280,7 @@
 
         <q-input
           outlined
-          v-model="earthingOther"
+          v-model="supportOther"
           label="Other"
           dense
           class="col-12 col-md-2"
@@ -503,6 +507,7 @@ export default {
     const supportOD = ref(null)
     const supportHeight = ref(null)
     const cToc = ref(null)
+    const supportOther = ref(null)
     const drawingNumberJacketSupport = ref(null)
     const itemCodeJacketSupport = ref(null)
 
@@ -521,7 +526,7 @@ export default {
 
     const showField = (field) => {
       const map = {
-        'Side Bracket': ['material', 'sideBracketSupportType', 'cToc'],
+        'Side Bracket': ['material', 'type', 'cToc'],
         'Leg Support': ['material', 'legSupportType', 'supportHeight'],
         'Side Bracket + Leg Support': ['material', 'legSupportType', 'cToc', 'sideBracketSupportType', 'supportHeight'],
         'Ring Support': ['material', 'suppportOD'],
@@ -781,6 +786,7 @@ export default {
       supportOD.value = data.supportOD || null
       supportHeight.value = data.supportHeight || null
       cToc.value = data.cToc || null
+      supportOther.value = data.supportOther || null
       drawingNumberJacketSupport.value = data.drawingNumberJacketSupport || null
       itemCodeJacketSupport.value = data.itemCodeJacketSupport || null
 
@@ -813,7 +819,14 @@ export default {
     const normalizeJacketDataFromStorage = (storedData) => {
       if (!storedData || typeof storedData !== 'object') return {}
 
-      // Directly use top-level keys
+      const supportComponentToLabel = {
+        'SideBracket': 'Side Bracket',
+        'LegSupport': 'Leg Support',
+        'RingSupport': 'Ring Support',
+        'SkirtSupport': 'Skirt Support',
+        'SideBracketLegSupport': 'Side Bracket + Leg Support'
+      }
+
       const jacket = storedData.jacket || {}
       const support = storedData.support || {}
       const earthing = storedData.earthing || {}
@@ -822,7 +835,7 @@ export default {
       const normalized = {
         // Jacket
         jacketType: jacket.jacketType || null,
-        jacketSupport: support.component || null,
+        jacketSupport: supportComponentToLabel[support.component] || null,  // ✅ HERE
         jacketTemperature: jacket.jacketTemperature || null,
         jacketPressure: jacket.jacketPressure || null,
         jacketNDT: jacket.jacketNDT || null,
@@ -843,6 +856,7 @@ export default {
         sideBracketSupportType: support.sideBracketSupportType || null,
         supportHeight: support.supportHeight || null,
         supportOD: support.supportOD || null,
+        supportOther: support.supportOther || null,
         drawingNumberJacketSupport: support.drawingNumberJacketSupport || null,
         itemCodeJacketSupport: support.itemCodeJacketSupport || null,
 
@@ -935,18 +949,20 @@ export default {
         support = {
           component: 'SideBracket',
           supportMaterial: supportMaterial.value? supportMaterial.value: null,
-          // supportType: supportType.value? supportType.value: null,
-          supportType: sideBracketSupportType.value ? sideBracketSupportType.value : null,
+          supportType: supportType.value? supportType.value: null,
+          // supportType: sideBracketSupportType.value ? sideBracketSupportType.value : null,
           cToc: cToc.value? cToc.value: null,
-          suitToInsulation: suitToInsulation.value? suitToInsulation.value: null
+          suitToInsulation: suitToInsulation.value? suitToInsulation.value: null,
+          supportOther: supportOther.value? supportOther.value: null,
         }
       }
       else if(jacketSupport.value === 'Leg Support'){
         support = {
           component: 'LegSupport',
           supportMaterial: supportMaterial.value? supportMaterial.value: null,
-          supportType: supportType.value? supportType.value: null,
-          supportHeight: supportHeight.value? supportHeight.value: null
+          legSupportType: legSupportType.value? legSupportType.value: null,
+          supportHeight: supportHeight.value? supportHeight.value: null,
+          supportOther: supportOther.value? supportOther.value: null
         }
       }
       else if(jacketSupport.value === 'Side Bracket + Leg Support'){
@@ -957,7 +973,8 @@ export default {
           cToc: cToc.value? cToc.value: null,
           sideBracketSupportType: sideBracketSupportType.value? sideBracketSupportType.value: null,
           supportHeight: supportHeight.value? supportHeight.value: null,
-          suitToInsulation: suitToInsulation.value? suitToInsulation.value: null
+          suitToInsulation: suitToInsulation.value? suitToInsulation.value: null,
+          supportOther: supportOther.value? supportOther.value: null
         }
       }
       else if(jacketSupport.value === 'Ring Support'){
@@ -966,7 +983,8 @@ export default {
           supportMaterial: supportMaterial.value? supportMaterial.value: null,
           supportType: supportType.value? supportType.value: null,
           supportOD: supportOD.value? supportOD.value: null,
-          suitToInsulation: suitToInsulation.value? suitToInsulation.value: null
+          suitToInsulation: suitToInsulation.value? suitToInsulation.value: null,
+          supportOther: supportOther.value? supportOther.value: null
         }
       }
       else if(jacketSupport.value === 'Skirt Support'){
@@ -976,7 +994,8 @@ export default {
           supportType: supportType.value? supportType.value: null,
           supportOD: supportOD.value? supportOD.value: null,
           supportHeight: supportHeight.value? supportHeight.value: null,
-          suitToInsulation: suitToInsulation.value? suitToInsulation.value: null
+          suitToInsulation: suitToInsulation.value? suitToInsulation.value: null,
+          supportOther: supportOther.value? supportOther.value: null
         }
       }
       const jacketData = {
@@ -1030,6 +1049,20 @@ export default {
       emit('save-jacket', jacketData)
     }
 
+    const showSaveToJsonButton = ref(false)
+
+    const checkIfAllJacketDataIsComplete = () => {
+      const allFilled =
+        drawingNumberJacket.value && itemCodeJacket.value &&
+        drawingNumberJacketEarthing.value && itemCodeJacketEarthing.value &&
+        drawingNumberJacketSupport.value && itemCodeJacketSupport.value &&
+        nozzleTable.value.every(row => row.drawingNumber && row.itemCode);
+
+      showSaveToJsonButton.value = Boolean(allFilled);
+    };
+
+
+
     const assignValues = (data) => {
       console.log(data)
       if(data?.component === 'JacketNozzle'){
@@ -1050,6 +1083,8 @@ export default {
         drawingNumberJacketSupport.value = data.model_info.drawingNumber
         itemCodeJacketSupport.value = data.model_info.itemCode
       }
+
+      checkIfAllJacketDataIsComplete();
     }
 
     return {
@@ -1098,6 +1133,7 @@ export default {
         supportOD,
         supportHeight,
         cToc,
+        supportOther,
         drawingNumberJacketSupport,
         itemCodeJacketSupport,
 
@@ -1111,6 +1147,9 @@ export default {
         shellThickness,
         dishThickness,
 
+        // Extra
+        showSaveToJsonButton,
+
         // Method
         showField,
         getJacketMasters,
@@ -1122,6 +1161,7 @@ export default {
         prepareJacketData,
         fillData,
         normalizeJacketDataFromStorage,
+        checkIfAllJacketDataIsComplete,
         assignValues,
         addNozzleRow,
         removeLastNozzleRow,
@@ -1158,7 +1198,7 @@ export default {
     },
     jacket: {
       handler(newVal) {
-        if (!this.loadedFromLocalStorage && newVal?.model_info) {
+        if (newVal?.model_info) {
           this.assignValues(newVal)
         }
       },
