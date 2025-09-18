@@ -3,8 +3,11 @@
     <div class="q-mb-md">
       <div class="row q-gutter-md q-wrap items-center">
         <q-space/>
-        <q-chip v-if="showSaveToJsonButton" icon="check" square color="green-5" text-color="white" clickable @click="saveToJsonFile()">
+        <q-chip icon="check" square color="green-5" text-color="white" clickable :disable="!showSaveToJsonButton" @click="saveToJsonFile()">
           {{ "Save To File" }}
+          <q-tooltip v-if="!showSaveToJsonButton">
+            Please complete all required drawing numbers and item codes.
+          </q-tooltip>
         </q-chip>
       </div>
     </div>

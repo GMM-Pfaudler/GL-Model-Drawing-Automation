@@ -308,7 +308,9 @@ export default {
             immersionLength: immersionLengthOne.value ? immersionLengthOne.value.toString() : null,
             thermowellType: thermowellTypeOne.value ? thermowellTypeOne.value : null,
             thermowellTipType: thermowellTipTypeOne.value ? thermowellTipTypeOne.value : null
-            };
+            }; 
+
+            // console.log(data)
         }
 
         if (thermowellNumber === 'two') {
@@ -337,6 +339,7 @@ export default {
         if(data?.thermowellNo){
             const no = data?.thermowellNo
             if(no === 'one'){
+                // console.log('model_info:', data.model_info)
                 drawingNumberOne.value = data?.model_info.drawingNumber
                 itemCodeOne.value = data?.model_info.itemCode
                 const thermowellDraftOne = {
@@ -363,6 +366,8 @@ export default {
                 }
                 localStorage.setItem('thermowellDraftTwo', JSON.stringify(thermowellDraftTwo))
             }
+            // console.log('Received assignData for thermowell TWO:', data)
+            // console.log('model_info:', data?.model_info)
         }
     }
 
@@ -387,8 +392,8 @@ export default {
             }
         }
         emit('save-thermowell', allThermowellData)
-        localStorage.removeItem('thermowellDraftOne')
-        localStorage.removeItem('thermowellDraftTwo')
+        // localStorage.removeItem('thermowellDraftOne')
+        // localStorage.removeItem('thermowellDraftTwo')
     }
 
     return {

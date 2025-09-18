@@ -2114,7 +2114,7 @@ export default {
           || component === 'sight/light glass flange'
           || component === 'extension piece'
           || component === 'baffle'
-          || component === 'thermowell'
+          // || component === 'thermowell'
           || component === 'bov'){
             if(response.data.result === null){
               this.comp = component[0].toUpperCase() + component.substr(1)
@@ -2195,22 +2195,22 @@ export default {
           //   }
           //   this.baffleData = data
           // }
-          // else if(component === 'thermowell'){
-          //   if(response.data.result === null){
-          //     this.comp = component[0].toUpperCase() + component.substr(1)
-          //     this.thermowellDrawingNumber = null
-          //     this.thermowellItemCode = null
-          //     this.drawingNumber = null
-          //     this.itemCode = null
-          //     this.isItemCodeNull = true
-          //   }
-          //   else {
-          //     data.model_info.drawingNumber = response.data.result.drawingNumber.toString()
-          //     data.model_info.itemCode = response.data.result.itemCode.toString()
-          //     this.thermowellOfnData = data
-          //   }
-          //   this.thermowellData = data
-          // }
+          else if(component === 'thermowell'){
+            if(response.data.result === null){
+              this.comp = component[0].toUpperCase() + component.substr(1)
+              this.thermowellDrawingNumber = null
+              this.thermowellItemCode = null
+              this.drawingNumber = null
+              this.itemCode = null
+              this.isItemCodeNull = true
+            }
+            else {
+              data.model_info.drawingNumber = response.data.result.drawingNumber.toString()
+              data.model_info.itemCode = response.data.result.itemCode.toString()
+              this.thermowellOfnData = data
+            }
+            this.thermowellData = data
+          }
           else if(component === 'sensor'){
             if(response.data.result === null){
               this.comp = component[0].toUpperCase() + component.substr(1)
@@ -2587,7 +2587,7 @@ export default {
           || this.comp.toLowerCase() === 'sight/light glass flange'
           || this.comp.toLowerCase() === 'extension piece'
           || this.comp.toLowerCase() === 'baffle'
-          || this.comp.toLowerCase() === 'thermowell'
+          // || this.comp.toLowerCase() === 'thermowell'
           || this.comp.toLowerCase() === 'bov') {
           this.fittingsData.model_info = model_info
           objToSave = {[this.comp.toLowerCase()]: this.fittingsData}
@@ -2648,10 +2648,10 @@ export default {
         //   this.baffleData.model_info = model_info
         //   objToSave = {[this.comp.toLowerCase()]: this.baffleData}
         // }
-        // else if(this.comp.toLowerCase() === 'thermowell') {
-        //   this.thermowellData.model_info = model_info
-        //   objToSave = {[this.comp.toLowerCase()]: this.thermowellData}
-        // }
+        else if(this.comp.toLowerCase() === 'thermowell') {
+          this.thermowellData.model_info = model_info
+          objToSave = {[this.comp.toLowerCase()]: this.thermowellData}
+        }
         else if(this.comp.toLowerCase() === 'sensor') {
           this.sensorData.model_info = model_info
           objToSave = {[this.comp.toLowerCase()]: this.sensorData}
@@ -2728,7 +2728,7 @@ export default {
             || this.comp.toLowerCase() === 'sight/light glass flange'
             || this.comp.toLowerCase() === 'extension piece'
             || this.comp.toLowerCase() === 'baffle'
-            || this.comp.toLowerCase() === 'thermowell'
+            // || this.comp.toLowerCase() === 'thermowell'
             || this.comp.toLowerCase() === 'bov'){
               this.fittingsData = {fittings: this.fittingsData}
             }
