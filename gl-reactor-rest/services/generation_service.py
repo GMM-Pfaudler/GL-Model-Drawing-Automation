@@ -106,7 +106,8 @@ class Generation:
                                 {'comp': 'manhole_c_clamp', 'partnumber': '', 'member': '', 'itemcode':'79010136'},
                                 {'comp': 'spring_balance_assembly', 'partnumber': '', 'member': '', 'itemcode':'56181000-0101'},
                                 {'comp': 'manhole_sight_glass_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0362'},
-                                {'comp': 'manhole_sight_glass', 'partnumber': '', 'member': '', 'itemcode':'760039'}
+                                {'comp': 'manhole_sight_glass', 'partnumber': '', 'member': '', 'itemcode':'760039'},
+                                {'comp': 'manhole_sight_flange', 'partnumber': '', 'member': '', 'itemcode':'5602-0092'},
                                 ]
         downloaded_components_files = self.vault.find_files_by_item_codes(item_codes=component_item_codes)
         res = self.inventor.generate(components=downloaded_components_files)

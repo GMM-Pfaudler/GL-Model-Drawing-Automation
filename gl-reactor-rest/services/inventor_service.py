@@ -1738,16 +1738,58 @@ class Inventor:
 
                 print("manhole_sight_glass_gasket end")
 
-            # elif item.get("component") == 'spring_balance_assembly':
+            elif item.get("component") == 'spring_balance_assembly':
 
-            #     print("manhole_sight_glass_gasket ")
+                print("Start: spring_balance_assembly")
 
-            #     manhole_sight_glass_gasket = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
-            #     manhole_sight_glass_gasket.Grounded = False
+                spring_balance_assembly = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
+                spring_balance_assembly.Grounded = False
 
-            # spring_balance_assembly
+                manhole_stump = self.find_occurrence_by_keyword_recursive(occurrences=monoblock.SubOccurrences, target_keyword="3817-0018")
+                stump_xy_plane_proxy = manhole_stump.CreateGeometryProxy(manhole_stump.Definition.WorkPlanes["XY Plane"])
+                # stump_xz_plane_proxy = manhole_stump.CreateGeometryProxy(manhole_stump.Definition.WorkPlanes["XZ Plane"])
+                stump_yz_plane_proxy = manhole_stump.CreateGeometryProxy(manhole_stump.Definition.WorkPlanes["YZ Plane"])
 
+                spring_balance_assembly_xy_plane_proxy = spring_balance_assembly.CreateGeometryProxy(spring_balance_assembly.Definition.WorkPlanes["XY Plane"])
+                spring_balance_assembly_yz_plane_proxy = spring_balance_assembly.CreateGeometryProxy(spring_balance_assembly.Definition.WorkPlanes["YZ Plane"])
 
+                spring_balance_assembly_flush_1 = main_assy_def.Constraints.AddFlushConstraint(spring_balance_assembly_xy_plane_proxy, stump_xy_plane_proxy, -32.3, None, None)
+                spring_balance_assembly_angle_xy = main_assy_def.Constraints.AddAngleConstraint(stump_xy_plane_proxy, spring_balance_assembly_xy_plane_proxy, 0, 78593, None, None, None)
+                spring_balance_assembly_flush_2 = main_assy_def.Constraints.AddFlushConstraint(spring_balance_assembly_yz_plane_proxy, stump_yz_plane_proxy, 0.0, None, None)
+            
+            elif item.get("component") == 'manhole_sight_glass':
+                print("Start: manhole_sight_glass")
+
+                manhole_sight_glass = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
+                manhole_sight_glass.Grounded = False
+
+                manhole_sight_glass_y_axis_proxy = manhole_sight_glass.CreateGeometryProxy(manhole_sight_glass.Definition.WorkAxes["Y Axis"])
+                manhole_sight_glass_xy_plane_proxy = manhole_sight_glass.CreateGeometryProxy(manhole_sight_glass.Definition.WorkPlanes["XY Plane"])
+                manhole_sight_glass_yz_plane_proxy = manhole_sight_glass.CreateGeometryProxy(manhole_sight_glass.Definition.WorkPlanes["YZ Plane"])
+                manhole_sight_glass_xz_plane_proxy = manhole_sight_glass.CreateGeometryProxy(manhole_sight_glass.Definition.WorkPlanes["XZ Plane"])
+                
+                SLIT_ENVELOPE = self.find_occurrence_recursive(occurrences=manhole_sight_glass_gasket.SubOccurrences, target_name="DN100_158_105_5.2_SLIT ENVELOPE")
+                gasket_ref_plane = SLIT_ENVELOPE.CreateGeometryProxy(SLIT_ENVELOPE.Definition.WorkPlanes["GASKET REF PLANE"])
+
+                manhole_sight_glass_mate1 = main_assy_def.Constraints.AddMateConstraint2(manhole_sight_glass_y_axis_proxy, manhole_cover_y_axis_proxy, 0, 24833, 24833, 115459, None, None)
+                manhole_sight_glass_mate2 = main_assy_def.Constraints.AddMateConstraint2(manhole_sight_glass_xz_plane_proxy, gasket_ref_plane, 0, 24833, 24833, 115459, None, None)
+                print("End: manhole_sight_glass")
+            
+            elif item.get("component") == 'manhole_sight_flange':
+                print("Start: manhole_sight_flange")
+
+                manhole_sight_flange = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
+                manhole_sight_flange.Grounded = False
+
+                manhole_sight_flange_y_axis_proxy = manhole_sight_flange.CreateGeometryProxy(manhole_sight_flange.Definition.WorkAxes["Y Axis"])
+                manhole_sight_flange_ass_plane_proxy = manhole_sight_flange.CreateGeometryProxy(manhole_sight_flange.Definition.WorkPlanes["ASSEMBLY PLANE"])
+                manhole_sight_flange_xy_plane_proxy = manhole_sight_flange.CreateGeometryProxy(manhole_sight_flange.Definition.WorkPlanes["XY PLANE"])
+
+                manhole_sight_flange_mate1 = main_assy_def.Constraints.AddMateConstraint2(manhole_sight_flange_y_axis_proxy, manhole_sight_glass_y_axis_proxy, 0, 24833, 24833, 115459, None, None)
+                manhole_sight_glass_gasket_flush_2 = main_assy_def.Constraints.AddFlushConstraint(manhole_sight_glass_xz_plane_proxy, manhole_sight_flange_ass_plane_proxy, 0.3, None, None)
+                manhole_sight_flange_mate2 = main_assy_def.Constraints.AddMateConstraint(manhole_cover_xy_plane_proxy, manhole_sight_flange_xy_plane_proxy, 0, 24833, 24833, None, None)
+
+                print("End: manhole_sight_flange")
         return True
     
     def find_occurrence_recursive(self, occurrences, target_name):
