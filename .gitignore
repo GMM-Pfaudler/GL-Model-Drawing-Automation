@@ -15,3 +15,4 @@
 /gl-vault-api/VaultWebApplication/bin
 /gl-vault-api/VaultWebApplication/obj
 /gl-vault-api/VaultWebApplication/SDK Ref
+.env
