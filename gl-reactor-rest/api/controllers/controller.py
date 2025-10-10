@@ -84,6 +84,47 @@ async def save_to_json(request: Request):
         print("Exception: ", e)
         raise HTTPException(status_code=500, detail='Something went wrong with Saving component details to JSON.')
     
+@router.post("/save-component-progress")
+async def save_component_progress(request: Request):
+    try:
+        body = await request.json()  # <-- this is the payload sent by frontend
+        print("Received payload:", body)
+
+        # Pass entire payload to the service
+        result = components_service.save_component_progress(payload=body)
+
+        # If Excel is locked or cannot be saved
+        if not result or result.get("status") == "error":
+            raise HTTPException(
+                status_code=409,
+                detail="Excel file is open or locked. Please close it before saving."
+            )
+
+        # Normal success response
+        unique_id = result.get("unique_id")
+        progress_status = result.get("status")
+
+        return {
+            "status": progress_status,       # "new", "existing"
+            "unique_id": unique_id,           # "ASBCE_6300L0001", etc.
+            "message": (
+                "Component progress saved successfully."
+                if progress_status == "new"
+                else "Component already exists."
+            ),
+            "file_path": result.get("file_path")  # optional, path to the Excel file
+        }
+
+    except HTTPException as http_exc:
+        raise http_exc  # Allow FastAPI to handle the 409 gracefully
+
+    except Exception as e:
+        print("❌ Exception in /save-component-progress:", e)
+        raise HTTPException(
+            status_code=500,
+            detail="Something went wrong while saving component progress."
+        )
+
 @router.post("/generate")
 async def generate_model(request: Request):
     try:

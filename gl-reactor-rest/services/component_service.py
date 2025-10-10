@@ -192,6 +192,83 @@ class Components:
             print(f"Unexpected error occurred: {ex}")
             return {"result": None}
         
+    @staticmethod
+    def save_component_progress(payload: dict):
+        import os
+        import pandas as pd
+
+        try:
+            # Extract payload
+            data = payload.get("component_data", {})
+            id_prefix = payload.get("id_prefix", "ASB")
+            model_type = payload.get("model_type", "")
+            capacity = payload.get("capacity", "")
+            component_name = payload.get("component_name", "component")
+
+            # Flatten component data into a single dict row
+            flat_row = {}
+            for comp, vals in data.items():
+                flat_row[f"{comp}.drawing_number"] = vals.get("drawing_number")
+                flat_row[f"{comp}.item_code"] = vals.get("item_code")
+
+            print(f"Model Type:- {model_type}")
+            print(f"Model capacity:- {capacity}")
+            print(f"Component name:- {component_name}")
+
+            # Build folder path
+            base_dir = os.path.join("D:\\GL", model_type, capacity, component_name)
+            os.makedirs(base_dir, exist_ok=True)
+
+            # Excel file path (single file per component)
+            excel_path = os.path.join(base_dir, f"{component_name}fullcomponent.xlsx")
+
+            # If file doesn't exist → create new
+            if not os.path.exists(excel_path):
+                unique_id = f"{id_prefix}0001"
+                df = pd.DataFrame([{"Unique ID": unique_id, **flat_row}])
+                df.to_excel(excel_path, index=False)
+                print(f"✅ Created new Excel: {excel_path}")
+                return {"unique_id": unique_id, "status": "new", "file_path": excel_path}
+
+            # Load existing Excel
+            df = pd.read_excel(excel_path)
+
+            # Ensure Unique ID column exists
+            if "Unique ID" not in df.columns:
+                df.insert(0, "Unique ID", None)
+
+            # Keep schema consistent
+            df = df[[c for c in df.columns if c in ["Unique ID"] + list(flat_row.keys())]]
+
+            # Check if this combination already exists
+            mask = (df.drop(columns=["Unique ID"]).fillna("").astype(str) ==
+                    pd.Series(flat_row).fillna("").astype(str)).all(axis=1)
+            existing_rows = df[mask]
+
+            if not existing_rows.empty:
+                unique_id = existing_rows.iloc[0]["Unique ID"]
+                print(f"✅ Existing combination found: {unique_id}")
+                return {"unique_id": unique_id, "status": "existing", "file_path": excel_path}
+
+            # Generate new unique ID
+            existing_ids = df["Unique ID"].dropna().astype(str)
+            existing_nums = [int(i.replace(id_prefix, "")) for i in existing_ids if i.startswith(id_prefix)]
+            last_num = max(existing_nums) if existing_nums else 0
+            new_num = last_num + 1
+            unique_id = f"{id_prefix}{new_num:04d}"
+
+            # Append new row
+            new_row = {"Unique ID": unique_id, **flat_row}
+            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+            df.to_excel(excel_path, index=False)
+
+            print(f"✅ Added new entry: {unique_id} in {excel_path}")
+            return {"unique_id": unique_id, "status": "new", "file_path": excel_path}
+
+        except Exception as e:
+            print(f"❌ Error in save_component_progress: {e}")
+            return {"unique_id": None, "status": "error"}
+
     def save_to_json(self, component_details):
         """
         Updates or appends a dictionary in a JSON file based on a unique key.

@@ -2,8 +2,31 @@
   <div class="q-pa-md" style="height: 100vh; display: flex; flex-direction: column;">
     <div class="q-mb-md">
       <div class="row q-gutter-md q-wrap items-center">
-        <q-space/>
-        <q-chip icon="check" square color="green-5" text-color="white" clickable :disable="!showSaveToJsonButton" @click="saveToJsonFile()">
+
+        <!-- Unique ID chip -->
+        <q-chip
+          v-if="uniqueAssemblyId"
+          icon="label"
+          color="primary"
+          text-color="white"
+          square
+          label
+          class="col-auto"
+        >
+          {{ "Assembly ID: " + uniqueAssemblyId }}
+        </q-chip>
+
+        <q-space />
+
+        <q-chip
+          icon="check"
+          square
+          color="green-5"
+          text-color="white"
+          clickable
+          :disable="!showSaveToJsonButton"
+          @click="saveAll"
+        >
           {{ "Save To File" }}
           <q-tooltip v-if="!showSaveToJsonButton">
             Please complete all required drawing numbers and item codes.
@@ -11,6 +34,7 @@
         </q-chip>
       </div>
     </div>
+
     <q-separator spaced />
 
     <div class="text-h6 q-mb-md">Drive Base Ring</div>
@@ -753,6 +777,7 @@
 import { onMounted, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import emitter from '../event-bus.js';
+import axios from 'axios';
 export default {
   name: 'DriveAssemblyComponent',
   props: {
@@ -1036,6 +1061,107 @@ export default {
       emit('save-drive-assembly-data', driveAssembly)
     }
 
+    const host = ref("http://127.0.0.1:8000");
+
+    const saveComponentProgress = async () => {
+      try {
+        // Retrieve saved component data from localStorage
+        const savedJSON = localStorage.getItem('savedData:driveAssembly');
+        if (!savedJSON) {
+          console.warn("No saved data found for driveAssembly");
+          return null;
+        }
+
+        const savedData = JSON.parse(savedJSON);
+        const componentDataFull = savedData.driveAssembly;
+
+        // Get the model to construct prefix
+        const modelName = componentDataFull.model_info?.model?.replace(/\s+/g, "");
+        const idPrefix = `ASB${modelName || ""}`; // fallback if no model
+
+        const modelType = componentDataFull.model_info?.model?.split('_')[0] || "";
+        const capacity = componentDataFull.model_info?.capacity || "";
+
+        // Construct minimal payload for backend
+        const componentData = {
+          drivebasering: {
+            drawing_number: componentDataFull.driveBaseRing.drawingNumberDriveBaseRing,
+            item_code: componentDataFull.driveBaseRing.itemCodeDriveBaseRing
+          },
+          padplate: {
+            drawing_number: componentDataFull.padPlat.drawingNumberPadPlate,
+            item_code: componentDataFull.padPlat.itemCodePadPlate
+          },
+          lanternsupport: {
+            drawing_number: componentDataFull.lanternSupport.drawingNumberLanternSupport,
+            item_code: componentDataFull.lanternSupport.itemCodeLanternSupport
+          },
+          lanternguard: {
+            drawing_number: componentDataFull.lanternGuard.drawingNumberLanternGuard,
+            item_code: componentDataFull.lanternGuard.itemCodeLanternGuard
+          },
+          agitatorgearcoupling: {
+            drawing_number: componentDataFull.agitatorGearCoupling.drawingNumberAgitatorGearCoupling,
+            item_code: componentDataFull.agitatorGearCoupling.itemCodeAgitatorGearCoupling
+          },
+          gearboxmodel: {
+            drawing_number: componentDataFull.adaptorGearBoxModel.drawingNumberGearBoxModel,
+            item_code: componentDataFull.adaptorGearBoxModel.itemCodeGearBoxModel
+          },
+          bearingnumber: {
+            drawing_number: componentDataFull.bearing.drawingNumberBearingNumber,
+            item_code: componentDataFull.bearing.itemCodeBearingNumber
+          },
+          sleeve: {
+            drawing_number: componentDataFull.sleeve.drawingNumberSleeve,
+            item_code: componentDataFull.sleeve.itemCodeSleeve
+          },
+          oilseal: {
+            drawing_number: componentDataFull.oilSeal.drawingNumberOilSeal,
+            item_code: componentDataFull.oilSeal.itemCodeOilSeal
+          },
+          circlip: {
+            drawing_number: componentDataFull.circlip.drawingNumberCirclip,
+            item_code: componentDataFull.circlip.itemCodeCirclip
+          },
+          locknut: {
+            drawing_number: componentDataFull.lockNut.drawingNumberLockNut,
+            item_code: componentDataFull.lockNut.itemCodeLockNut
+          },
+          lockwasher: {
+            drawing_number: componentDataFull.lockWasher.drawingNumberLockWasher,
+            item_code: componentDataFull.lockWasher.itemCodeLockWasher
+          }
+        };
+
+        // Send to backend
+        const payload = {
+          component_data: componentData,
+          id_prefix: idPrefix,
+          model_type: modelType,
+          capacity: capacity,
+          component_name: "driveAssembly"
+        };
+
+        const response = await axios.post(
+          host.value + "/api/v1/save-component-progress",
+          JSON.stringify(payload),
+          { headers: { "Content-Type": "application/json" } }
+        );
+
+        const { unique_id, status } = response.data;
+        console.log("Assembly ID:", unique_id, "Status:", status);
+
+        emit("component-progress-saved", { unique_id, status });
+
+        return { unique_id, status };
+      } catch (error) {
+        console.error("Error saving component progress:", error);
+        $q.notify({ type: "negative", message: "Failed to save component progress." });
+        return null;
+      }
+    };
+
     const searchDriveAssemblyData = (item) => {
       let dataToSearch = null
       if(item === 'driveBaseRing'){
@@ -1150,6 +1276,34 @@ export default {
             }
         }
         return false;
+    }
+
+    const uniqueAssemblyId = ref(null)
+
+    const saveAll = async () => {
+      try {
+        // Save full JSON locally
+        saveToJsonFile()
+
+        // Save minimal data to backend and get assembly ID
+        const result = await saveComponentProgress()
+
+        if (result) {
+          // Store the unique ID for the chip
+          uniqueAssemblyId.value = result.unique_id
+
+          $q.notify({
+            type: "positive",
+            message: `Saved successfully! Assembly ID: ${result.unique_id} (${result.status})`
+          })
+        }
+      } catch (error) {
+        console.error("Save failed:", error)
+        $q.notify({
+          type: "negative",
+          message: "Failed to save assembly progress."
+        })
+      }
     }
 
     const showSaveToJsonButton = ref(false);
@@ -1311,6 +1465,10 @@ export default {
         // Methods
         showSaveToJsonButton,
         saveToJsonFile,
+        uniqueAssemblyId,
+        saveAll,
+        host,
+        saveComponentProgress,
         searchDriveAssemblyData,
         assignData,
         onUpdateSleeve
