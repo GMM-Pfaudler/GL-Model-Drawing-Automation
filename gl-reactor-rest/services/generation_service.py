@@ -91,23 +91,76 @@ class Generation:
         # print(all_item_codes)
         # item_codes = self.get_item_codes(components_details=components)
         # item_codes = ['7005CE06300-000', '5625-0015', '3616-0003', '5605B-0016']
-        component_item_codes = [{'comp': 'monoblock', 'partnumber': '', 'member': '','itemcode':'7005CE06300-000'}, 
-                                {'comp': 'jacket', 'partnumber': '', 'member': '', 'itemcode':'5625-0015'}, 
-                                {'comp': 'diapharmring', 'partnumber': '', 'member': '', 'itemcode':'3616-0003'}, 
-                                {'comp': 'sidebracket', 'partnumber': '', 'member': '', 'itemcode':'5605B-0016'}, 
-                                {'comp': 'jacketnozzle_shell', 'partnumber': '', 'member': '', 'itemcode':'5621-1035'}, 
-                                {'comp': 'jacketnozzle_bottom', 'partnumber': '', 'member': '', 'itemcode':'5621-1036'},
-                                {'comp': 'ms_coupling', 'partnumber': '', 'member': 'SA105_COUPLING_50L_96-GPF-7236-17834 R3', 'itemcode':''}, #5617NS0028
-                                {'comp': 'baffle_plate', 'partnumber': '', 'member': '', 'itemcode':'3502B0099'},
-                                {'comp': 'manhole_gasket_1', 'partnumber': '', 'member': '', 'itemcode':'T1-0086'},
-                                {'comp': 'bush_type_protection_ring', 'partnumber': '', 'member': '', 'itemcode':'T5B0579'},
-                                {'comp': 'manhole_gasket_2', 'partnumber': '', 'member': '', 'itemcode':'T1-0086'},
-                                {'comp': 'manhole_cover', 'partnumber': '', 'member': '', 'itemcode':'7053-0115'},
-                                {'comp': 'manhole_c_clamp', 'partnumber': '', 'member': '', 'itemcode':'79010136'},
-                                {'comp': 'spring_balance_assembly', 'partnumber': '', 'member': '', 'itemcode':'56181000-0101'},
-                                {'comp': 'manhole_sight_glass_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0362'},
-                                {'comp': 'manhole_sight_glass', 'partnumber': '', 'member': '', 'itemcode':'760039'},
-                                {'comp': 'manhole_sight_flange', 'partnumber': '', 'member': '', 'itemcode':'5602-0092'},
+        component_item_codes = [{'comp': 'monoblock', 'partnumber': '', 'member': '','itemcode':'7005CE06300-000', 'sub_components': []}, 
+                                {'comp': 'jacket', 'partnumber': '', 'member': '', 'itemcode':'5625-0015', 'sub_components': []}, 
+                                {'comp': 'diapharmring', 'partnumber': '', 'member': '', 'itemcode':'3616-0003', 'sub_components': []}, 
+                                {'comp': 'sidebracket', 'partnumber': '', 'member': '', 'itemcode':'5605B-0016', 'sub_components': []}, 
+                                {'comp': 'jacketnozzle_shell', 'partnumber': '', 'member': '', 'itemcode':'5621-1035', 'sub_components': []}, 
+                                {'comp': 'jacketnozzle_bottom', 'partnumber': '', 'member': '', 'itemcode':'5621-1036', 'sub_components': []},
+                                {'comp': 'ms_coupling', 'partnumber': '', 'member': 'SA105_COUPLING_50L_96-GPF-7236-17834 R3.iam', 'itemcode':'', 'sub_components': []}, #5617NS0028
+                                {'comp': 'baffle_plate', 'partnumber': '', 'member': '', 'itemcode':'3502B0099', 'sub_components': []},
+
+                                # Manhole
+                                {'comp': 'manhole_gasket_1', 'partnumber': '', 'member': '', 'itemcode':'T1-0086', 'sub_components': []},
+                                {'comp': 'bush_type_protection_ring', 'partnumber': '', 'member': '', 'itemcode':'T5B0579', 'sub_components': []},
+                                {'comp': 'manhole_gasket_2', 'partnumber': '', 'member': '', 'itemcode':'T1-0086', 'sub_components': []},
+                                {'comp': 'manhole_cover', 'partnumber': '', 'member': '', 'itemcode':'7053-0115', 'sub_components': []},
+                                {'comp': 'manhole_c_clamp', 'partnumber': '', 'member': '', 'itemcode':'79010136', 'sub_components': []},
+                                {'comp': 'spring_balance_assembly', 'partnumber': '', 'member': '90-GPF-5403 R1_SPRING BALANCE ASSLY WITH WASHER_500NB_FAST.iam', 'itemcode':'', 'sub_components': []}, #56181000-0101
+                                {'comp': 'manhole_sight_glass_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0362', 'sub_components': []},
+                                {'comp': 'manhole_sight_glass', 'partnumber': '', 'member': '', 'itemcode':'760039', 'sub_components': []},
+                                {'comp': 'manhole_sight_flange', 'partnumber': '', 'member': '', 'itemcode':'5602-0092', 'sub_components': []},
+                                {'comp': 'manhole_fastener', 'partnumber': '', 'member': '', 'itemcode':'13CS0069', 'sub_components': []},
+                                {'comp': 'manhole_washer', 'partnumber': '', 'member': '', 'itemcode':'T1-0364', 'sub_components': []},
+                                {'comp': 'manhole_nut', 'partnumber': '', 'member': '', 'itemcode':'7058-0019', 'sub_components': []},
+
+                                # COC
+                                {'comp': 'coc_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0104', 'sub_components': []},
+                                {'comp': 'coc', 'partnumber': '', 'member': '', 'itemcode':'7004-0002', 'sub_components': []},
+                                {'comp': 'coc_c_clamp', 'partnumber': '', 'member': '', 'itemcode':'79010013', 'sub_components': []},
+                                {'comp': 'center_nozzle_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0365', 'sub_components': []},
+                                {'comp': 'drive_assembly', 'partnumber': '', 'member': 'HD100M-60-160-015-DM-0007_RATIO_14_CGL_IE3_GL.iam', 'itemcode':'', 'sub_components': []},
+                                {'comp': 'mechanical_seal', 'partnumber': '', 'member': '', 'itemcode':'80061824', 'sub_components': []},
+                                {'comp': 'agitator', 'partnumber': '', 'member': '', 'itemcode':'9015-0019', 'sub_components': []},
+                                
+                                # N2 nozzle
+                                {'comp': 'n2_150_60_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0360', 'sub_components': []},
+                                {'comp': 'n2_150_60_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0364', 'sub_components': []},
+                                {'comp': 'n2_150_60_blind_cover', 'partnumber': '', 'member': '', 'itemcode':'7058-0019', 'sub_components': []},
+
+                                {'comp': 'n2_150_60_fastener', 'partnumber': '', 'member': '', 'itemcode':'13CS0069', 'sub_components': []},
+                                {'comp': 'n2_150_60_washer', 'partnumber': '', 'member': '', 'itemcode':'T1-0364', 'sub_components': []},
+                                {'comp': 'n2_150_60_nut', 'partnumber': '', 'member': '', 'itemcode':'7058-0019', 'sub_components': []},
+
+                                # N3 nozzle
+                                {'comp': 'n3_150_95_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0360', 'sub_components': []},
+                                {'comp': 'n3_150_95_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0364', 'sub_components': []},
+                                {'comp': 'n3_150_95_blind_cover', 'partnumber': '', 'member': '', 'itemcode':'7058-0019', 'sub_components': []},
+
+                                # N5 nozzle
+                                {'comp': 'n5_250_135_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0354', 'sub_components': []},
+                                {'comp': 'n5_250_135_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0366', 'sub_components': []},
+                                {'comp': 'n5_250_135_baffle', 'partnumber': '', 'member': '', 'itemcode':'901601-0033', 'sub_components': []},
+
+                                # N6 nozzle
+                                {'comp': 'n6_150_180_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0352', 'sub_components': []},
+                                {'comp': 'n6_150_180_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0364', 'sub_components': []},
+                                {'comp': 'n6_150_180_blind_cover', 'partnumber': '', 'member': '', 'itemcode':'5602-0094', 'sub_components': []},
+
+                                {'comp': 'n7_250_225_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0361', 'sub_components': []},
+                                {'comp': 'n7_250_225_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0366', 'sub_components': []},
+                                {'comp': 'n7_250_225_blind_cover', 'partnumber': '', 'member': '', 'itemcode':'7058-0021', 'sub_components': []},
+
+                                # N9 nozzle
+                                {'comp': 'n9_150_265_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0360', 'sub_components': []},
+                                {'comp': 'n9_150_265_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0364', 'sub_components': []},
+                                {'comp': 'n9_150_265_blind_cover', 'partnumber': '', 'member': '', 'itemcode':'7058-0019', 'sub_components': []},
+                                
+                                # N10 nozzle
+                                {'comp': 'n10_150_300_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0360', 'sub_components': []},
+                                {'comp': 'n10_150_300_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0364', 'sub_components': []},
+                                {'comp': 'n10_150_300_blind_cover', 'partnumber': '', 'member': '', 'itemcode':'7058-0019', 'sub_components': []},
+                                # fastener: 13CS0069
                                 ]
         downloaded_components_files = self.vault.find_files_by_item_codes(item_codes=component_item_codes)
         res = self.inventor.generate(components=downloaded_components_files)
@@ -122,3 +175,61 @@ class Generation:
         print(downloaded_components_files)
         result = self.inventor.open(downloaded_components_files)
         return result
+    
+
+
+    # {'comp': 'n1_500_0', 'partnumber': '', 'member': '', 'itemcode':'', 'sub_components': [
+    #     {'comp': 'n1_split_flange', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n1_gasket', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n1_blind_cover', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n1_other', 'partnumber': '', 'member': '', 'itemcode':''},
+    # ]},
+    # {'comp': 'n2_150_60', 'partnumber': '', 'member': '', 'itemcode':'', 
+    #     'sub_components': [
+    #     {'comp': 'n2_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0360', 'sub_components': []},
+    #     {'comp': 'n2_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0364', 'sub_components': []},
+    #     {'comp': 'n2_blind_cover', 'partnumber': '', 'member': '', 'itemcode':'7058-0019', 'sub_components': []},
+    #     {'comp': 'n2_other', 'partnumber': '', 'member': '', 'itemcode':'', 'sub_components': []},
+    # ]},
+    # {'comp': 'n3_150_95', 'partnumber': '', 'member': '', 'itemcode':'', 
+    #     'sub_components': [
+    #     {'comp': 'n3_split_flange', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n3_gasket', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n3_blind_cover', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n3_other', 'partnumber': '', 'member': '', 'itemcode':''},
+    # ]},
+    # {'comp': 'n5_250_135', 'partnumber': '', 'member': '', 'itemcode':'', 
+    #     'sub_components': [
+    #     {'comp': 'n5_split_flange', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n5_gasket', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n5_blind_cover', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n5_other', 'partnumber': '', 'member': '', 'itemcode':''},
+    # ]},
+    # {'comp': 'n6_150_180', 'partnumber': '', 'member': '', 'itemcode':'', 
+    #     'sub_components': [
+    #     {'comp': 'n6_split_flange', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n6_gasket', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n6_blind_cover', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n6_other', 'partnumber': '', 'member': '', 'itemcode':''},
+    # ]},
+    # {'comp': 'n7_250_225', 'partnumber': '', 'member': '', 'itemcode':'', 
+    #     'sub_components': [
+    #     {'comp': 'n7_split_flange', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n7_gasket', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n7_blind_cover', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n7_other', 'partnumber': '', 'member': '', 'itemcode':''},
+    # ]},
+    # {'comp': 'n9_150_265', 'partnumber': '', 'member': '', 'itemcode':'', 
+    #     'sub_components': [
+    #     {'comp': 'n9_split_flange', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n9_gasket', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n9_blind_cover', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n9_other', 'partnumber': '', 'member': '', 'itemcode':''},
+    # ]},
+    # {'comp': 'n10_150_300', 'partnumber': '', 'member': '', 'itemcode':'', 
+    #     'sub_components': [
+    #     {'comp': 'n10_split_flange', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n10_gasket', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n10_blind_cover', 'partnumber': '', 'member': '', 'itemcode':''},
+    #     {'comp': 'n10_other', 'partnumber': '', 'member': '', 'itemcode':''},
+    # ]},

@@ -16,3 +16,8 @@
 /gl-vault-api/VaultWebApplication/obj
 /gl-vault-api/VaultWebApplication/SDK Ref
 .env
+
+
+# VS Code
+.vscode
+.vscode/launch.json
