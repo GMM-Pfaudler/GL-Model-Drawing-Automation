@@ -1815,7 +1815,7 @@ export default {
       if(sono.value === null || sono.value === "" || sono.value === ''){
         isSalesOrderNumberNull.value = true
       }else{
-        const sonoDetails = {sono: sono.value}
+        const sonoDetails = {sono: sono.value, model: model.value, reactor: reactor.value, capacity: capacity.value}
         axios.post(host.value + '/api/v1/generate', JSON.stringify({details: sonoDetails}), {
           headers: {
           'Content-Type': 'application/json'
