@@ -110,6 +110,7 @@ class Generation:
                                 {'comp': 'manhole_sight_glass_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0362', 'sub_components': []},
                                 {'comp': 'manhole_sight_glass', 'partnumber': '', 'member': '', 'itemcode':'760039', 'sub_components': []},
                                 {'comp': 'manhole_sight_flange', 'partnumber': '', 'member': '', 'itemcode':'5602-0092', 'sub_components': []},
+                                
                                 {'comp': 'manhole_fastener', 'partnumber': '', 'member': '', 'itemcode':'13CS0069', 'sub_components': []},
                                 {'comp': 'manhole_washer', 'partnumber': '', 'member': '', 'itemcode':'T1-0364', 'sub_components': []},
                                 {'comp': 'manhole_nut', 'partnumber': '', 'member': '', 'itemcode':'7058-0019', 'sub_components': []},
@@ -163,7 +164,7 @@ class Generation:
                                 # fastener: 13CS0069
                                 ]
         downloaded_components_files = self.vault.find_files_by_item_codes(item_codes=component_item_codes)
-        res = self.inventor.generate(components=downloaded_components_files)
+        res = self.inventor.generate(components=downloaded_components_files, model_details=model_details)
         print(res)
         print(downloaded_components_files)
         return "Model Generated"

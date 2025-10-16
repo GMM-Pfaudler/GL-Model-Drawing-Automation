@@ -1,4 +1,7 @@
 import math
+import ctypes
+import win32con
+from pywinauto import Application
 import win32com.client
 import win32gui
 import time
@@ -34,7 +37,7 @@ class Inventor:
             print("Could not find the Inventor window.")
             return False
         
-    def generate(self, components):
+    def generate(self, components, model_details):
         # Start Inventor
         inv_app = win32com.client.Dispatch("Inventor.Application")
         inv_app.Visible = True
@@ -46,6 +49,13 @@ class Inventor:
         main_assy_doc = inv_app.Documents.Add("12291", inv_app.FileManager.GetTemplateFile("12291", "8963"), True)
         main_assy_def = main_assy_doc.ComponentDefinition
         monoblock = jacket = diapharm = sidebracket = jacketnozzle = None
+
+        window_title = inv_app.Caption
+        try:
+            app = Application(backend="uia").connect(title=window_title)
+            app.window(title=window_title).set_focus()
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
         for idx, item in enumerate(components):
             if item.get("component") == 'monoblock':
@@ -2004,10 +2014,6 @@ class Inventor:
                     n2_150_60_blind_cover = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                     n2_150_60_blind_cover.Grounded = False
 
-                    n2_150_60_blind_cover.SubOccurrences.Item(1).Features.Item("Hole")
-
-                    main_assy_def.WorkAxes.AddByAnalyticEdge(n2_150_60_blind_cover.SubOccurrences.Item(1).Definition.Features.Item("Hole").Faces.Item(1).Edges.Item(2))
-
                     n2_150_60_blind_cover_y_axis_proxy = n2_150_60_blind_cover.CreateGeometryProxy(n2_150_60_blind_cover.Definition.WorkAxes["Y Axis"])
                     n2_150_60_blind_cover_xy_plane_proxy = n2_150_60_blind_cover.CreateGeometryProxy(n2_150_60_blind_cover.Definition.WorkPlanes["XY PLANE"])
                     n2_150_60_blind_cover_xz_plane_proxy = n2_150_60_blind_cover.CreateGeometryProxy(n2_150_60_blind_cover.Definition.WorkPlanes["XZ PLANE"])
@@ -2017,6 +2023,22 @@ class Inventor:
                     n2_150_60_blind_cover_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n2_150_60_gasket_ref_plane, n2_150_60_blind_cover_xz_plane_proxy, 0, None, None)
 
                     print("End: n2_150_60_blind_cover")
+
+            elif item.get("component") == 'n2_150_60_fastener':
+                    print("Start: n2_150_60_fastener")
+                    comp = 'n2_150_60_fastener'
+                    comp_splits = comp.split('_')
+                    nozzle_name = comp_splits[0]
+                    nozzle_size = comp_splits[1]
+                    nozzle_deg = comp_splits[2]
+                    fitting = comp_splits[3]
+
+                    n2_150_60_fastener = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
+                    n2_150_60_fastener.Grounded = False
+
+                    n2_150_60_fastener_y_axis_proxy = n2_150_60_fastener.CreateGeometryProxy(n2_150_60_fastener.Definition.WorkAxes["Y Axis"])
+                    n2_150_60_fastener_xy_plane_proxy = n2_150_60_fastener.CreateGeometryProxy(n2_150_60_fastener.Definition.WorkPlanes["XY PLANE"])
+                    n2_150_60_fastener_xz_plane_proxy = n2_150_60_fastener.CreateGeometryProxy(n2_150_60_fastener.Definition.WorkPlanes["XZ PLANE"])
 
             elif item.get("component") == 'n3_150_95_split_flange':
                     print("Start: n3_150_95_split_flange")
@@ -2182,7 +2204,9 @@ class Inventor:
                     n6_150_180_split_flange = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                     n6_150_180_split_flange.Grounded = False
                     n6_150_180_split_flange_y_axis_proxy = n6_150_180_split_flange.CreateGeometryProxy(n6_150_180_split_flange.Definition.WorkAxes["Y Axis"])
+                    n6_150_180_split_flange_fastner_axis_proxy = n6_150_180_split_flange.CreateGeometryProxy(n6_150_180_split_flange.Definition.WorkAxes["Fastner Assly Axis"])
                     n6_150_180_split_flange_xy_plane_proxy = n6_150_180_split_flange.CreateGeometryProxy(n6_150_180_split_flange.Definition.WorkPlanes["XY PLANE"])
+                    n6_150_180_split_flange_xz_plane_proxy = n6_150_180_split_flange.CreateGeometryProxy(n6_150_180_split_flange.Definition.WorkPlanes["XZ PLANE"])
                     n6_150_180_split_flange_top_face_plane_proxy = n6_150_180_split_flange.CreateGeometryProxy(n6_150_180_split_flange.Definition.WorkPlanes["TOP FACE PLANE"])
 
                     swagged_dish = self.find_occurrence_recursive(occurrences=main_assy_def.Occurrences, target_name="CT-1950")
@@ -2195,7 +2219,7 @@ class Inventor:
 
                     n6_150_180_split_flange_mate_1 = main_assy_def.Constraints.AddMateConstraint2(swagged_dish_n6_axis_proxy, n6_150_180_split_flange_y_axis_proxy, 0, 24833, 24833, 115459, None, None)
                     n6_150_180_split_flange_flush_1 = main_assy_def.Constraints.AddFlushConstraint(swagged_dish_n6_plane_proxy, n6_150_180_split_flange_xy_plane_proxy, 0, None, None)
-                    n6_150_180_split_flange_flush_2 = main_assy_def.Constraints.AddFlushConstraint(monoblock_nozzle_size_plane, n6_150_180_split_flange_top_face_plane_proxy, 2.0, None, None)
+                    n6_150_180_split_flange_flush_2 = main_assy_def.Constraints.AddFlushConstraint(monoblock_nozzle_size_plane, n6_150_180_split_flange_top_face_plane_proxy, -2.0, None, None)
 
                     print("End: n6_150_180_split_flange")
 
@@ -2220,31 +2244,159 @@ class Inventor:
 
                     n3_150_95_gasket_mate_1 = main_assy_def.Constraints.AddMateConstraint2(swagged_dish_n6_axis_proxy, n6_150_180_gasket_y_axis_proxy, 0, 24833, 24833, 115459, None, None)
                     n3_150_95_gasket_flush_1 = main_assy_def.Constraints.AddFlushConstraint(swagged_dish_n6_plane_proxy, n6_150_180_gasket_xy_plane_proxy, 0, None, None)
-                    n3_150_95_gasket_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_split_flange_top_face_plane_proxy, n6_150_180_gasket_xz_plane_proxy, 0, None, None)
+                    n3_150_95_gasket_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_split_flange_top_face_plane_proxy, n6_150_180_gasket_xz_plane_proxy, 2.0, None, None)
 
                     print("End: n6_150_180_gasket")
 
-            elif item.get("component") == 'n6_150_180_blind_cover':
-                    print("Start: n6_150_180_blind_cover")
-                    comp = 'n6_150_180_blind_cover'
+            elif item.get("component") == 'n6_150_180_toughenedglass':
+                    print("Start: n6_150_180_toughenedglass")
+                    comp = 'n6_150_180_toughenedglass'
+                    comp_splits = comp.split('_')
+                    nozzle_name = comp_splits[0]
+                    nozzle_size = comp_splits[1]
+                    nozzle_deg = comp_splits[2]
+                    fitting = comp_splits[3]
+                    
+                    n6_150_180_toughenedglass = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
+                    n6_150_180_toughenedglass.Grounded = False
+
+                    n6_150_180_toughenedglass_y_axis_proxy = n6_150_180_toughenedglass.CreateGeometryProxy(n6_150_180_toughenedglass.Definition.WorkAxes["Y Axis"])
+                    n6_150_180_toughenedglass_xy_plane_proxy = n6_150_180_toughenedglass.CreateGeometryProxy(n6_150_180_toughenedglass.Definition.WorkPlanes["XY PLANE"])
+                    n6_150_180_toughenedglass_xz_plane_proxy = n6_150_180_toughenedglass.CreateGeometryProxy(n6_150_180_toughenedglass.Definition.WorkPlanes["XZ PLANE"])
+
+
+                    n6_150_180_toughenedglass_mate_1 = main_assy_def.Constraints.AddMateConstraint2(n6_150_180_gasket_y_axis_proxy, n6_150_180_toughenedglass_y_axis_proxy, 0, 24833, 24833, 115459, None, None)
+                    n6_150_180_toughenedglass_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_gasket_xy_plane_proxy, n6_150_180_toughenedglass_xy_plane_proxy, 0, None, None)
+                    n6_150_180_toughenedglass_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_gasket_ref_plane, n6_150_180_toughenedglass_xz_plane_proxy, 2.0, None, None)
+
+                    print("End: n6_150_180_toughenedglass")
+
+            elif item.get("component") == 'n6_150_180_lightglass':
+                    print("Start: n6_150_180_lightglass")
+                    comp = 'n6_150_180_lightglass'
                     comp_splits = comp.split('_')
                     nozzle_name = comp_splits[0]
                     nozzle_size = comp_splits[1]
                     nozzle_deg = comp_splits[2]
                     fitting = comp_splits[3]
 
-                    n6_150_180_blind_cover = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
-                    n6_150_180_blind_cover.Grounded = False
+                    n6_150_180_lightglass = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
+                    n6_150_180_lightglass.Grounded = False
 
-                    n6_150_180_blind_cover_y_axis_proxy = n6_150_180_blind_cover.CreateGeometryProxy(n6_150_180_blind_cover.Definition.WorkAxes["Y Axis"])
-                    n6_150_180_blind_cover_xy_plane_proxy = n6_150_180_blind_cover.CreateGeometryProxy(n6_150_180_blind_cover.Definition.WorkPlanes["XY PLANE"])
-                    n6_150_180_blind_cover_xz_plane_proxy = n6_150_180_blind_cover.CreateGeometryProxy(n6_150_180_blind_cover.Definition.WorkPlanes["XZ PLANE"])
+                    n6_150_180_lightglass_y_axis_proxy = n6_150_180_lightglass.CreateGeometryProxy(n6_150_180_lightglass.Definition.WorkAxes["Y Axis"])
+                    n6_150_180_lightglass_xy_plane_proxy = n6_150_180_lightglass.CreateGeometryProxy(n6_150_180_lightglass.Definition.WorkPlanes["XY PLANE"])
+                    n6_150_180_lightglass_xz_plane_proxy = n6_150_180_lightglass.CreateGeometryProxy(n6_150_180_lightglass.Definition.WorkPlanes["XZ PLANE"])
+                    n6_150_180_lightglass_assembly_plane_proxy = n6_150_180_lightglass.CreateGeometryProxy(n6_150_180_lightglass.Definition.WorkPlanes["ASSEMBLY PLANE"])
 
-                    n6_150_180_blind_cover_mate_1 = main_assy_def.Constraints.AddMateConstraint2(n6_150_180_gasket_y_axis_proxy, n6_150_180_blind_cover_y_axis_proxy, 0, 24833, 24833, 115459, None, None)
-                    n6_150_180_blind_cover_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_split_flange_xy_plane_proxy, n6_150_180_blind_cover_xy_plane_proxy, 0, None, None)
-                    n6_150_180_blind_cover_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_gasket_ref_plane, n6_150_180_blind_cover_xz_plane_proxy, 0, None, None)
+                    n6_150_180_blind_cover_mate_1 = main_assy_def.Constraints.AddMateConstraint2(n6_150_180_gasket_y_axis_proxy, n6_150_180_lightglass_y_axis_proxy, 0, 24833, 24833, 115459, None, None)
+                    n6_150_180_blind_cover_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_split_flange_xy_plane_proxy, n6_150_180_lightglass_xy_plane_proxy, 0, None, None)
+                    n6_150_180_blind_cover_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_toughenedglass_xz_plane_proxy, n6_150_180_lightglass_assembly_plane_proxy, 0.3, None, None)
 
-                    print("End: n6_150_180_blind_cover")
+                    print("End: n6_150_180_lightglass")
+
+            elif item.get("component") == 'n6_150_60_fastener':
+                    print("Start: n6_150_60_fastener")
+                    comp = 'n6_150_60_fastener'
+                    comp_splits = comp.split('_')
+                    nozzle_name = comp_splits[0]
+                    nozzle_size = comp_splits[1]
+                    nozzle_deg = comp_splits[2]
+                    fitting = comp_splits[3]
+
+                    n6_150_60_fastener = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
+                    n6_150_60_fastener.Grounded = False
+
+                    n6_150_60_fastener_y_axis_proxy = n6_150_60_fastener.CreateGeometryProxy(n6_150_60_fastener.Definition.WorkAxes["Y Axis"])
+                    n6_150_60_fastener_xy_plane_proxy = n6_150_60_fastener.CreateGeometryProxy(n6_150_60_fastener.Definition.WorkPlanes["XY PLANE"])
+                    n6_150_60_fastener_xz_plane_proxy = n6_150_60_fastener.CreateGeometryProxy(n6_150_60_fastener.Definition.WorkPlanes["XZ PLANE"])       
+
+                    n6_150_60_fastener_mate_1 = main_assy_def.Constraints.AddMateConstraint2(n6_150_60_fastener_y_axis_proxy, n6_150_180_split_flange_fastner_axis_proxy, 0, 24833, 24833, 115459, None, None)
+                    n6_150_60_fastener_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n6_150_60_fastener_xz_plane_proxy, n6_150_180_split_flange_top_face_plane_proxy, 0, None, None)
+
+
+                    n6_150_60_fastener_collection = inv_app.TransientObjects.CreateObjectCollection()
+                    n6_150_60_fastener_collection.Add(n6_150_60_fastener)
+
+                    angle = math.radians(360/8)
+
+                    occurrence_patterns = main_assy_def.OccurrencePatterns
+                    circular_pattern = occurrence_patterns.AddCircularPattern(
+                        ParentComponents=n6_150_60_fastener_collection,
+                        AxisEntity=n6_150_180_lightglass_y_axis_proxy,
+                        AxisEntityNaturalDirection=True,
+                        AngleOffset=angle,
+                        Count=8
+                    )
+
+                    print("End: n6_150_60_fastener")
+            
+            elif item.get("component") == 'n6_150_60_washer':
+                    print("Start: n6_150_60_washer")
+                    comp = 'n6_150_60_washer'
+                    comp_splits = comp.split('_')
+                    nozzle_name = comp_splits[0]
+                    nozzle_size = comp_splits[1]
+                    nozzle_deg = comp_splits[2]
+                    fitting = comp_splits[3]
+
+                    n6_150_60_washer = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
+                    n6_150_60_washer.Grounded = False
+
+                    n6_150_60_washer_y_axis_proxy = n6_150_60_washer.CreateGeometryProxy(n6_150_60_washer.Definition.WorkAxes["Y Axis"])
+                    n6_150_60_washer_xy_plane_proxy = n6_150_60_washer.CreateGeometryProxy(n6_150_60_washer.Definition.WorkPlanes["XY PLANE"])
+                    n6_150_60_washer_xz_plane_proxy = n6_150_60_washer.CreateGeometryProxy(n6_150_60_washer.Definition.WorkPlanes["XZ PLANE"]) 
+
+                    n6_150_60_washer_mate_1 = main_assy_def.Constraints.AddMateConstraint2(n6_150_60_washer_y_axis_proxy, n6_150_60_fastener_y_axis_proxy, 0, 24833, 24833, 115459, None, None)
+                    n6_150_60_washer_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n6_150_60_washer_xz_plane_proxy, n6_150_180_split_flange_xz_plane_proxy, 0, None, None)
+
+
+                    n6_150_60_washer_collection = inv_app.TransientObjects.CreateObjectCollection()
+                    n6_150_60_washer_collection.Add(n6_150_60_washer)
+
+                    angle = math.radians(360/8)
+
+                    occurrence_patterns = main_assy_def.OccurrencePatterns
+                    circular_pattern = occurrence_patterns.AddCircularPattern(
+                        ParentComponents=n6_150_60_washer_collection,
+                        AxisEntity=n6_150_180_lightglass_y_axis_proxy,
+                        AxisEntityNaturalDirection=True,
+                        AngleOffset=angle,
+                        Count=8
+                    )
+
+            elif item.get("component") == 'n6_150_60_nut':
+                    print("Start: n6_150_60_nut")
+                    comp = 'n6_150_60_nut'
+                    comp_splits = comp.split('_')
+                    nozzle_name = comp_splits[0]
+                    nozzle_size = comp_splits[1]
+                    nozzle_deg = comp_splits[2]
+                    fitting = comp_splits[3]
+
+                    n6_150_60_nut = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
+                    n6_150_60_nut.Grounded = False
+
+                    n6_150_60_nut_y_axis_proxy = n6_150_60_nut.CreateGeometryProxy(n6_150_60_nut.Definition.WorkAxes["Y Axis"])
+                    n6_150_60_nut_xy_plane_proxy = n6_150_60_nut.CreateGeometryProxy(n6_150_60_nut.Definition.WorkPlanes["XY PLANE"])
+                    n6_150_60_nut_xz_plane_proxy = n6_150_60_nut.CreateGeometryProxy(n6_150_60_nut.Definition.WorkPlanes["XZ PLANE"]) 
+
+                    n6_150_60_nut_mate_1 = main_assy_def.Constraints.AddMateConstraint2(n6_150_60_nut_y_axis_proxy, n6_150_60_washer_y_axis_proxy, 0, 24833, 24833, 115459, None, None)
+                    n6_150_60_nut_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n6_150_60_nut_xz_plane_proxy, n6_150_180_lightglass_assembly_plane_proxy, 0, None, None)
+
+
+                    n6_150_60_nut_collection = inv_app.TransientObjects.CreateObjectCollection()
+                    n6_150_60_nut_collection.Add(n6_150_60_nut)
+
+                    angle = math.radians(360/8)
+
+                    occurrence_patterns = main_assy_def.OccurrencePatterns
+                    circular_pattern = occurrence_patterns.AddCircularPattern(
+                        ParentComponents=n6_150_60_nut_collection,
+                        AxisEntity=n6_150_180_lightglass_y_axis_proxy,
+                        AxisEntityNaturalDirection=True,
+                        AngleOffset=angle,
+                        Count=8
+                    )
 
             elif item.get("component") == 'n7_250_225_split_flange':
                     print("Start: n7_250_225_split_flange")
@@ -2473,6 +2625,18 @@ class Inventor:
                 n10_150_300_blind_cover_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n10_150_300_gasket_ref_plane, n10_150_300_blind_cover_xz_plane_proxy, 0, None, None)
 
                 print("End: n10_150_300_blind_cover")
+
+        so_no = model_details['details']['sono']
+        capacity = model_details['details']['capacity']
+        reactor = model_details['details']['reactor']
+        model = model_details['details']['model']
+        so_no_splits = so_no.split("_")
+        file_name = f"{so_no_splits[0]}_{model}"
+        # "D:\\Vault\\Designs\\ASSEMBLY\\SO NO"
+        folder_name = f"D:\\Vault\\Designs\\ASSEMBLY\\SO NO\\{so_no}"
+        file_path = f"{folder_name}\\{file_name}.iam"
+        inv_doc = inv_app.ActiveDocument
+        inv_doc.SaveAs(file_path, True)
 
         return True
     
