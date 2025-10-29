@@ -82,9 +82,78 @@ class Generation:
                     item_codes.append(item_code)
         print(item_codes)
         return item_codes
+
+    # def process_fittings(self, fittings):
+    #     """Convert fittings into structured list of dicts."""
+    #     sub_fittings = []
+    #     for fit in fittings:
+    #         sub_fittings.append({
+    #             'comp': fit.get('fittingNo', ''),
+    #             'partnumber': '',
+    #             'member': '',
+    #             'itemcode': fit.get('itemCode', ''),
+    #             'drawingNumber': fit.get('drawingNumber', ''),
+    #             'sub_components': []
+    #         })
+    #     return sub_fittings
+
+    # def process_nozzles(self, comp_data):
+    #     """Convert all nozzles (and fittings inside them) into proper structure."""
+    #     nozzles_list = []
+    #     for key, val in comp_data.items():
+    #         if key.startswith("nozzle_"):
+    #             try:
+    #                 nozzle_data = json.loads(val)
+    #                 fittings = nozzle_data.get('fittings', [])
+    #                 nozzle_data['fittings'] = self.process_fittings(fittings)
+                    
+    #                 nozzles_list.append({
+    #                     'comp': nozzle_data.get('nozzleNo', ''),
+    #                     'partnumber': '',
+    #                     'member': '',
+    #                     'itemcode': nozzle_data.get('itemCode', ''),
+    #                     'drawingNumber': nozzle_data.get('drawingNumber', ''),
+    #                     'sub_components': nozzle_data['fittings']
+    #                 })
+    #             except json.JSONDecodeError:
+    #                 continue
+    #     return nozzles_list
+
+    # def process_component(self, comp_name, comp_data):
+    #     """Process each component based on its type."""
+    #     model_info = comp_data.get('model_info', {})
+        
+    #     # Base structure
+    #     comp_dict = {
+    #         'comp': comp_name.lower(),
+    #         'partnumber': '',
+    #         'member': '',
+    #         'itemcode': model_info.get('itemCode', ''),
+    #         'drawingNumber': model_info.get('drawingNumber', ''),
+    #         'sub_components': []
+    #     }
+
+    #     # Custom logic per component
+    #     if comp_name.lower() == 'monoblock':
+    #         comp_dict['sub_components'] = self.process_nozzles(comp_data)
+        
+    #     elif comp_name.lower() == 'coc':
+    #         # Future logic for coc, if it ever has subcomponents
+    #         comp_dict['sub_components'] = []
+
+    #     return comp_dict
+
+    # def process_components(self, data):
+    #     """Main processor for all components."""
+    #     result = []
+    #     for comp_dict in data:
+    #         for comp_name, comp_data in comp_dict.items():
+    #             result.append(self.process_component(comp_name, comp_data))
+    #     return result    
     
     def generate_model(self, model_details):
-        components = self.get_component_list(model_details=model_details)
+        # components = self.get_component_list(model_details=model_details)
+        # # result = self.process_components(data=components)
         # all_item_codes = []
         # for obj in components:
         #     all_item_codes.extend(self.extract_item_codes(obj))
@@ -130,13 +199,17 @@ class Generation:
                                 {'comp': 'n2_150_60_blind_cover', 'partnumber': '', 'member': '', 'itemcode':'7058-0019', 'sub_components': []},
 
                                 {'comp': 'n2_150_60_fastener', 'partnumber': '', 'member': '', 'itemcode':'13CS0069', 'sub_components': []},
-                                {'comp': 'n2_150_60_washer', 'partnumber': '', 'member': '', 'itemcode':'T1-0364', 'sub_components': []},
-                                {'comp': 'n2_150_60_nut', 'partnumber': '', 'member': '', 'itemcode':'7058-0019', 'sub_components': []},
+                                {'comp': 'n2_150_60_washer', 'partnumber': '', 'member': '', 'itemcode':'13WS0155', 'sub_components': []},
+                                {'comp': 'n2_150_60_nut', 'partnumber': '', 'member': '', 'itemcode':'13CSNT-0007', 'sub_components': []},
 
                                 # N3 nozzle
                                 {'comp': 'n3_150_95_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0360', 'sub_components': []},
                                 {'comp': 'n3_150_95_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0364', 'sub_components': []},
                                 {'comp': 'n3_150_95_blind_cover', 'partnumber': '', 'member': '', 'itemcode':'7058-0019', 'sub_components': []},
+                                
+                                {'comp': 'n3_150_95_fastener', 'partnumber': '', 'member': '', 'itemcode':'13CS0069', 'sub_components': []},
+                                {'comp': 'n3_150_95_washer', 'partnumber': '', 'member': '', 'itemcode':'13WS0155', 'sub_components': []},
+                                {'comp': 'n3_150_95_nut', 'partnumber': '', 'member': '', 'itemcode':'13CSNT-0007', 'sub_components': []},
 
                                 # N5 nozzle
                                 {'comp': 'n5_250_135_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0354', 'sub_components': []},
@@ -146,22 +219,37 @@ class Generation:
                                 # N6 nozzle
                                 {'comp': 'n6_150_180_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0352', 'sub_components': []},
                                 {'comp': 'n6_150_180_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0364', 'sub_components': []},
-                                {'comp': 'n6_150_180_blind_cover', 'partnumber': '', 'member': '', 'itemcode':'5602-0094', 'sub_components': []},
+                                {'comp': 'n6_150_180_toughenedglass', 'partnumber': '', 'member': '', 'itemcode':'760031', 'sub_components': []},
+                                {'comp': 'n6_150_180_lightglass', 'partnumber': '', 'member': '', 'itemcode':'5602-0094', 'sub_components': []},
+                                {'comp': 'n6_150_180_fastener', 'partnumber': '', 'member': '', 'itemcode':'13CS0072', 'sub_components': []},
+                                {'comp': 'n6_150_180_washer', 'partnumber': '', 'member': '', 'itemcode':'13WS0155', 'sub_components': []},
+                                {'comp': 'n6_150_180_nut', 'partnumber': '', 'member': '', 'itemcode':'13CSNT-0007', 'sub_components': []},
 
                                 {'comp': 'n7_250_225_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0361', 'sub_components': []},
                                 {'comp': 'n7_250_225_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0366', 'sub_components': []},
                                 {'comp': 'n7_250_225_blind_cover', 'partnumber': '', 'member': '', 'itemcode':'7058-0021', 'sub_components': []},
 
+                                {'comp': 'n7_250_225_fastener', 'partnumber': '', 'member': '', 'itemcode':'13CS2298', 'sub_components': []},
+                                {'comp': 'n7_250_225_washer', 'partnumber': '', 'member': '', 'itemcode':'13WS0156', 'sub_components': []},
+                                {'comp': 'n7_250_225_nut', 'partnumber': '', 'member': '', 'itemcode':'13CSNT-0008', 'sub_components': []},
+
                                 # N9 nozzle
                                 {'comp': 'n9_150_265_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0360', 'sub_components': []},
                                 {'comp': 'n9_150_265_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0364', 'sub_components': []},
                                 {'comp': 'n9_150_265_blind_cover', 'partnumber': '', 'member': '', 'itemcode':'7058-0019', 'sub_components': []},
+
+                                {'comp': 'n9_150_265_fastener', 'partnumber': '', 'member': '', 'itemcode':'13CS0069', 'sub_components': []},
+                                {'comp': 'n9_150_265_washer', 'partnumber': '', 'member': '', 'itemcode':'13WS0155', 'sub_components': []},
+                                {'comp': 'n9_150_265_nut', 'partnumber': '', 'member': '', 'itemcode':'13CSNT-0007', 'sub_components': []},
                                 
                                 # N10 nozzle
                                 {'comp': 'n10_150_300_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0360', 'sub_components': []},
                                 {'comp': 'n10_150_300_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0364', 'sub_components': []},
                                 {'comp': 'n10_150_300_blind_cover', 'partnumber': '', 'member': '', 'itemcode':'7058-0019', 'sub_components': []},
-                                # fastener: 13CS0069
+
+                                {'comp': 'n10_150_300_fastener', 'partnumber': '', 'member': '', 'itemcode':'13CS0069', 'sub_components': []},
+                                {'comp': 'n10_150_300_washer', 'partnumber': '', 'member': '', 'itemcode':'13WS0155', 'sub_components': []},
+                                {'comp': 'n10_150_300_nut', 'partnumber': '', 'member': '', 'itemcode':'13CSNT-0007', 'sub_components': []},
                                 ]
         downloaded_components_files = self.vault.find_files_by_item_codes(item_codes=component_item_codes)
         res = self.inventor.generate(components=downloaded_components_files, model_details=model_details)

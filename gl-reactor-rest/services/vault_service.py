@@ -28,7 +28,17 @@ class Vault:
             result = response.json()
 
             for item in result:
-                path = item.get("filepath")
+                initial_path = item.get("filepath")
+                parts = initial_path.split(os.sep)
+                # Insert "Vault" before "Designs"
+                new_parts = []
+                for part in parts:
+                    if part == "Designs":
+                        new_parts.append("Vault")
+                    new_parts.append(part)
+
+                # Join back the path
+                path = os.sep.join(new_parts)
                 base64_content = item.get("base64")
                 component = item.get("component")
                 itemcode = item.get("itemcode")
