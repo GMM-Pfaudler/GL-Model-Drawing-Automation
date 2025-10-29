@@ -185,13 +185,13 @@
                     style="max-width: 250px;"
                     >
                     <q-input
-                        v-model="nozzles[index].fittings[fitIndex]"
-                        label="Fitting"
-                        outlined
-                        dense
-                        class="col"
-                        style="min-width: 180px;"
-                        disable
+                      :model-value="formatFittingLabel(fitting)"
+                      label="Fitting"
+                      outlined
+                      dense
+                      class="col"
+                      style="min-width: 180px;"
+                      disable
                     />
                     <q-btn
                         icon="close"
@@ -1907,59 +1907,98 @@ export default {
     }
 
     const addObjectToList = (fitting) => {
-      let fittingValue = null
-      if(fitting === 'Gasket'){
-        fittingValue = `${fitting}_${gasketSize.value}_${fittingItemCode.value}`
+      // Build the fitting data object
+      const fittingData = {
+        name: fitting || null,
+        itemCode: fittingItemCode.value || null,
+        drawingNumber: fittingDrawingNumber.value || null,
       }
-      else if(fitting === 'Split Flange'){
-        fittingValue = `${fitting}_${splitFlangeSize.value}_${fittingItemCode.value}`
+
+      // Assign size or specific fields depending on the fitting type
+      switch (fitting) {
+        case 'Gasket':
+          fittingData.size = gasketSize.value
+          break
+
+        case 'Split Flange':
+          fittingData.size = splitFlangeSize.value
+          break
+
+        case 'Blind Cover':
+          fittingData.size = blindCoverSize.value
+          break
+
+        case 'Reducing Flange':
+          fittingData.size = reducingFlangeSize.value
+          break
+
+        case 'Dip Pipe':
+          fittingData.size = dipPipeSize.value
+          break
+
+        case 'Sparger':
+          fittingData.size = splitFlangeSize.value
+          break
+
+        case 'Spray Ball Pipe':
+          fittingData.size = sprayBallPipeSize.value
+          break
+
+        case 'Spray Ball':
+          fittingData.size = sprayBallSize.value
+          break
+
+        case 'Tee':
+          fittingData.size = teeSize.value
+          break
+
+        case 'Manhole Protection Ring':
+          fittingData.size = protectionRingSize.value
+          break
+
+        case 'Manhole Cover':
+          fittingData.size = manholeCoverSize.value
+          break
+
+        case 'Toughened Glass':
+          fittingData.size = toughenedGlassSize.value
+          break
+
+        case 'Sight/Light Glass Flange':
+          fittingData.size = glassFlangeSize.value
+          break
+
+        case 'Extension Piece':
+          fittingData.size = extensionPieceSize.value
+          break
+
+        case 'Baffle':
+          fittingData.type = baffleType.value
+          break
+
+        case 'Thermowell':
+          fittingData.type = thermowellType.value
+          break
+
+        case 'BOV':
+          fittingData.type = bovType.value
+          fittingData.model = bovModel.value
+          break
       }
-      else if(fitting === 'Blind Cover'){
-        fittingValue = `${fitting}_${blindCoverSize.value}_${fittingItemCode.value}`
-      }
-      else if(fitting === 'Reducing Flange'){
-        fittingValue = `${fitting}_${reducingFlangeSize.value}_${fittingItemCode.value}`
-      }
-      else if(fitting === 'Dip Pipe'){
-        fittingValue = `${fitting}_${dipPipeSize.value}_${fittingItemCode.value}`
-      }
-      else if(fitting === 'Sparger'){
-        fittingValue = `${fitting}_${splitFlangeSize.value}_${fittingItemCode.value}`
-      }
-      else if(fitting === 'Spray Ball Pipe'){
-        fittingValue = `${fitting}_${sprayBallPipeSize.value}_${fittingItemCode.value}`
-      }
-      else if(fitting === 'Spray Ball'){
-        fittingValue = `${fitting}_${sprayBallSize.value}_${fittingItemCode.value}`
-      }
-      else if(fitting === 'Tee'){
-        fittingValue = `${fitting}_${teeSize.value}_${fittingItemCode.value}`
-      }
-      else if(fitting === 'Manhole Protection Ring'){
-        fittingValue = `${fitting}_${protectionRingSize.value}_${fittingItemCode.value}`
-      }
-      else if(fitting === 'Manhole Cover'){
-        fittingValue = `${fitting}_${manholeCoverSize.value}_${fittingItemCode.value}`
-      }
-      else if(fitting === 'Toughened Glass'){
-        fittingValue = `${fitting}_${toughenedGlassSize.value}_${fittingItemCode.value}`
-      }
-      else if(fitting === 'Sight/Light Glass Flange'){
-        fittingValue = `${fitting}_${glassFlangeSize.value}_${fittingItemCode.value}`
-      }
-      else if(fitting === 'Extension Piece'){
-        fittingValue = `${fitting}_${extensionPieceSize.value}_${fittingItemCode.value}`
-      }
-      else if(fitting === 'Baffle'){
-        fittingValue = `${fitting}_${baffleType.value}_${fittingItemCode.value}`
-      }
-      else if(fitting === 'Thermowell'){
-        fittingValue = `${fitting}_${thermowellType.value}_${fittingItemCode.value}`
-      }
-      else if(fitting === 'BOV'){
-        fittingValue = `${fitting}_${bovType.value}_${bovModel.value}`
-      }
-      nozzles.value[fittingIndex.value].fittings.push(fittingValue)
+
+      // Push into the fittings array of the selected nozzle
+      nozzles.value[fittingIndex.value].fittings.push(fittingData)
+
+      // Optional: console log to verify
+      console.log('Added fitting:', JSON.stringify(fittingData, null, 2))
+    }
+
+    const formatFittingLabel = (fitting) => {
+      if (!fitting) return ''
+      let label = fitting.name || ''
+      if (fitting.size) label += ` - ${fitting.size}`
+      if (fitting.itemCode) label += ` (${fitting.itemCode})`
+      return label
     }
 
     function hasNull(obj) {
@@ -2184,6 +2223,7 @@ export default {
         searchFittings,
         fillUpdatedData,
         addObjectToList,
+        formatFittingLabel,
         hasNull
     }
   },
