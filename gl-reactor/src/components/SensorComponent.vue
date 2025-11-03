@@ -156,7 +156,7 @@
                     label
                     class="col-12 col-md-2"
                     >
-                    Drawing #: {{ rtdDrawingNumberTwo }}
+                    Drawing Number: {{ rtdDrawingNumberTwo }}
                     </q-chip>
 
                     <q-chip
@@ -205,7 +205,7 @@
                     label
                     class="col-12 col-md-2"
                     >
-                    Drawing #: {{ dialThermoDrawingNumber }}
+                    Drawing Number: {{ dialThermoDrawingNumber }}
                     </q-chip>
 
                     <q-chip
@@ -393,29 +393,52 @@ export default {
     }
 
     const saveToJsonFile = () => {
-        const allSensorData = {
-            component: 'Sensor',
-            'one':{
-                sensorType: sensorType.value?sensorType.value:null,
-                rtdMakeOne: rtdMakeOne.value?rtdMakeOne.value:null,
-                rtdTypeOne: rtdTypeOne.value?rtdTypeOne.value:null,
-                rtdLengthOne: rtdLengthOne.value?rtdLengthOne.value:null,
-                rtdDrawingNumberOne: rtdDrawingNumberOne.value?rtdDrawingNumberOne.value:null,
-                rtdItemCodeOne: rtdItemCodeOne.value?rtdItemCodeOne.value:null,
-            },
-            'two': {
-                sensorType: sensorType.value?sensorType.value:null,
-                rtdMakeTwo: rtdMakeTwo.value?rtdMakeTwo.value:null,
-                rtdTypeTwo: rtdTypeTwo.value?rtdTypeTwo.value:null,
-                rtdLengthTwo: rtdLengthTwo.value?rtdLengthTwo.value:null,
-                rtdDrawingNumberTwo: rtdDrawingNumberTwo.value?rtdDrawingNumberTwo.value:null,
-                rtdItemCodeTwo: rtdItemCodeTwo.value?rtdItemCodeTwo.value:null
-            },
-            'dialThermo':{
-                sensorType: sensorType.value?sensorType.value:null,
-                dialThermoLength: dialThermoLength.value?dialThermoLength.value:null,
-                dialThermoDrawingNumber: dialThermoDrawingNumber.value?dialThermoDrawingNumber.value:null,
-                dialThermoItemCode: dialThermoItemCode.value?dialThermoItemCode.value:null
+        let allSensorData = null
+        if (sensorType.value === 'RTD') {
+            if (rtdQty.value === '1'){
+                allSensorData =  {
+                    component: 'Sensor',
+                    'one':{
+                        sensorType: sensorType.value?sensorType.value:null,
+                        rtdMakeOne: rtdMakeOne.value?rtdMakeOne.value:null,
+                        rtdTypeOne: rtdTypeOne.value?rtdTypeOne.value:null,
+                        rtdLengthOne: rtdLengthOne.value?rtdLengthOne.value:null,
+                        rtdDrawingNumberOne: rtdDrawingNumberOne.value?rtdDrawingNumberOne.value:null,
+                        rtdItemCodeOne: rtdItemCodeOne.value?rtdItemCodeOne.value:null,
+                    }
+                }
+            }
+            else if(rtdQty.value === '2'){
+                allSensorData =  {
+                    component: 'Sensor',
+                    'one':{
+                        sensorType: sensorType.value?sensorType.value:null,
+                        rtdMakeOne: rtdMakeOne.value?rtdMakeOne.value:null,
+                        rtdTypeOne: rtdTypeOne.value?rtdTypeOne.value:null,
+                        rtdLengthOne: rtdLengthOne.value?rtdLengthOne.value:null,
+                        rtdDrawingNumberOne: rtdDrawingNumberOne.value?rtdDrawingNumberOne.value:null,
+                        rtdItemCodeOne: rtdItemCodeOne.value?rtdItemCodeOne.value:null,
+                    },
+                    'two': {
+                        sensorType: sensorType.value?sensorType.value:null,
+                        rtdMakeTwo: rtdMakeTwo.value?rtdMakeTwo.value:null,
+                        rtdTypeTwo: rtdTypeTwo.value?rtdTypeTwo.value:null,
+                        rtdLengthTwo: rtdLengthTwo.value?rtdLengthTwo.value:null,
+                        rtdDrawingNumberTwo: rtdDrawingNumberTwo.value?rtdDrawingNumberTwo.value:null,
+                        rtdItemCodeTwo: rtdItemCodeTwo.value?rtdItemCodeTwo.value:null
+                    }
+                }
+            }  
+        }
+        else if (sensorType.value === 'Dial Thermometer') {
+            allSensorData =  {
+                component: 'Sensor',
+                'dialThermo':{
+                    sensorType: sensorType.value?sensorType.value:null,
+                    dialThermoLength: dialThermoLength.value?dialThermoLength.value:null,
+                    dialThermoDrawingNumber: dialThermoDrawingNumber.value?dialThermoDrawingNumber.value:null,
+                    dialThermoItemCode: dialThermoItemCode.value?dialThermoItemCode.value:null
+                }
             }
         }
         emit('save-sensor', allSensorData)
