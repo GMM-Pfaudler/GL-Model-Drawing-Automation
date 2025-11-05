@@ -177,41 +177,79 @@
                 <div class="text-subtitle2 q-mb-sm">Fittings</div>
 
                 <div class="row q-gutter-sm items-center">
+
                     <!-- Each fitting input -->
                     <div
-                    v-for="(fitting, fitIndex) in nozzle.fittings"
-                    :key="fitIndex"
-                    class="row items-center"
-                    style="max-width: 250px;"
+                      v-for="(fitting, fitIndex) in nozzle.fittings"
+                      :key="fitIndex"
+                      class="row items-center"
+                      style="max-width: 250px;"
                     >
-                    <q-input
-                      :model-value="formatFittingLabel(fitting)"
-                      label="Fitting"
-                      outlined
-                      dense
-                      class="col"
-                      style="min-width: 180px;"
-                      disable
-                    />
-                    <q-btn
+                      <q-input
+                        :model-value="formatFittingLabel(fitting)"
+                        label="Fitting"
+                        outlined
+                        dense
+                        class="col"
+                        style="min-width: 180px;"
+                        disable
+                      />
+                      <q-btn
                         icon="close"
                         color="negative"
                         dense
                         flat
                         @click="removeFitting(index, fitIndex)"
                         class="q-ml-xs"
-                    />
+                      />
+                    </div>
+
+                    <!-- Each fastener input -->
+                    <div
+                      v-for="(fastener, fstIndex) in nozzle.Fastner"
+                      :key="'fst-' + fstIndex"
+                      class="row items-center"
+                      style="max-width: 250px;"
+                    >
+                      <q-input
+                        :model-value="formatFastenerLabel(fastener)"
+                        label="Fastener"
+                        outlined
+                        dense
+                        class="col"
+                        style="min-width: 180px;"
+                        disable
+                      />
+                      <q-btn
+                        icon="close"
+                        color="negative"
+                        dense
+                        flat
+                        @click="removeFastener(index, fstIndex)"
+                        class="q-ml-xs"
+                      />
                     </div>
 
                     <!-- Add fitting button -->
                     <q-btn
-                    icon="add"
-                    color="primary"
-                    dense
-                    flat
-                    @click="addFitting(index)"
-                    class="q-ml-sm"
-                    label="Add Fitting"
+                      icon="add"
+                      color="primary"
+                      dense
+                      flat
+                      @click="addFitting(index)"
+                      class="q-ml-sm"
+                      label="Add Fitting"
+                    />
+
+                    <!-- Add fastener button -->
+                    <q-btn
+                      icon="add"
+                      color="primary"
+                      dense
+                      flat
+                      @click="addFastner(index)"
+                      class="q-ml-sm"
+                      label="Add Fastener"
                     />
                 </div>
                 </div>
@@ -1035,6 +1073,201 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+<q-dialog v-model="isFastner" persistent>
+  <q-card style="min-width: 500px">
+    <!-- Header -->
+    <q-card-section class="row items-center q-pb-none">
+      <div class="text-h6">Fastener</div>
+      <q-space />
+      <q-btn icon="close" flat round dense v-close-popup />
+    </q-card-section>
+
+    <!-- Type Selector -->
+    <q-card-section>
+      <div class="row q-gutter-md q-wrap">
+        <q-select
+          v-model="FastnerType"
+          :options="fastnerTypeOptions"
+          label="Select Fastener Type"
+          @update:model-value="onUpdateFastener"
+          emit-value
+          map-options
+          dense
+          outlined
+          :clearable="true"
+          class="col-12 col-md-5"
+        />
+        <q-space/>
+        <q-btn
+          outline
+          rounded
+          icon="search"
+          color="primary"
+          label="Search"
+          :disable="!FastnerType"
+          @click="searchFastner(FastnerType)"
+        />
+      </div>
+    </q-card-section>
+
+    <!-- Conditional Section -->
+    <q-card-section v-if="FastnerType === 'Bolt/Stud'" class="q-pt-none">
+      <div class="row q-gutter-md q-wrap">
+        <q-select
+          v-model="boltStud"
+          :options="boltStudTypeOptions"
+          label="Type"
+          emit-value
+          map-options
+          dense
+          outlined
+          :clearable="true"
+          class="col-12 col-md-3"
+        />
+        <q-select
+          v-model="boltStudMaterial"
+          :options="boltStudMaterialOptions"
+          label="Material"
+          emit-value
+          map-options
+          dense
+          outlined
+          :clearable="true"
+          class="col-12 col-md-3"
+        />
+        <q-select
+          v-model="boltStudSize"
+          :options="boltStudSizeOptions"
+          label="Size"
+          emit-value
+          map-options
+          dense
+          outlined
+          :clearable="true"
+          class="col-12 col-md-3"
+        />
+        <q-input
+          v-model.number="boltStudLength"
+          type="number"
+          label="Length (mm)"
+          suffix="mm"
+          dense
+          outlined
+          min="0"
+          class="col-12 col-md-3"
+        />
+      </div>
+    </q-card-section>
+
+    <!-- Washer Section -->
+    <q-card-section v-if="FastnerType === 'Washer'" class="q-pt-none">
+      <div class="row q-gutter-md q-wrap">
+        <!-- Material -->
+        <q-select
+          v-model="washerMaterial"
+          :options="washerMaterialOptions"
+          label="Material"
+          emit-value
+          map-options
+          dense
+          outlined
+          :clearable="true"
+          class="col-12 col-md-3"
+        />
+
+        <!-- Size -->
+        <q-select
+          v-model="washerSize"
+          :options="washerSizeOptions"
+          label="Size"
+          emit-value
+          map-options
+          dense
+          outlined
+          :clearable="true"
+          class="col-12 col-md-3"
+        />
+
+        <!-- Type -->
+        <q-select
+          v-model="washerType"
+          :options="washerTypeOptions"
+          label="Type"
+          emit-value
+          map-options
+          dense
+          outlined
+          :clearable="true"
+          class="col-12 col-md-3"
+        />
+      </div>
+    </q-card-section>
+
+    <!-- Nut Section -->
+    <q-card-section v-if="FastnerType === 'Nut'" class="q-pt-none">
+      <div class="row q-gutter-md q-wrap">
+        <!-- Material -->
+        <q-select
+          v-model="nutMaterial"
+          :options="nutMaterialOptions"
+          label="Material"
+          emit-value
+          map-options
+          dense
+          outlined
+          :clearable="true"
+          class="col-12 col-md-3"
+        />
+
+        <!-- Size -->
+        <q-select
+          v-model="nutSize"
+          :options="nutSizeOptions"
+          label="Size"
+          emit-value
+          map-options
+          dense
+          outlined
+          :clearable="true"
+          class="col-12 col-md-3"
+        />
+      </div>
+    </q-card-section>
+
+     <!-- Search Result Display -->
+    <q-card-section v-if="true" class="q-pt-none">
+      <div class="row q-gutter-md q-wrap">
+        <q-chip
+          v-if="true"
+          outline
+          square
+          color="blue-5"
+          text-color="white"
+        >
+          {{ "Drawing Number: " + fastenerDrawingNumber }}
+        </q-chip>
+        <q-chip
+          v-if="true"
+          outline
+          square
+          color="blue-5"
+          text-color="white"
+        >
+          {{ "Item Code: " + fastenerItemCode }}
+        </q-chip>
+      </div>
+    </q-card-section>
+
+    <!-- Footer -->
+    <q-card-actions align="right">
+      <q-btn flat label="Cancel" color="negative" v-close-popup />
+      <q-btn flat label="Save" color="primary" v-close-popup @click="addFastenerToList(FastnerType)" />
+    </q-card-actions>
+  </q-card>
+</q-dialog>
+
+
   </div>
 </template>
 
@@ -1047,6 +1280,7 @@ export default {
   props: {
     monoblock: Object,
     fittingsData: Object,
+    fastenerData: Object,
     bovMasters: Object
   },
   emits: ['search-data', 'get-bov-masters'],
@@ -1091,7 +1325,35 @@ export default {
     const fitting = ref(fittingsOptions.value[0])
     const fittingDrawingNumber = ref(null)
     const fittingItemCode = ref(null)
-    
+
+    const fastenerDrawingNumber = ref(null)
+    const fastenerItemCode = ref(null)
+
+    const isFastner = ref(false)
+    const fastenerIndex = ref(null)
+    const Fastner = ref({})
+    const FastnerType = ref(null)
+    const fastnerTypeOptions = ref(["Bolt/Stud","Washer","Nut"])
+    const boltStud = ref(null)
+    const boltStudTypeOptions = ref(['Bolt','Stud','Allen Bolt'])
+    const boltStudMaterial = ref(null)
+    const boltStudMaterialOptions = ref(['M1','M2','M3'])
+    const boltStudSize = ref(null)
+    const boltStudSizeOptions = ref(['M12','M16','M20','M22','M24'])
+    const boltStudLength = ref(null)
+
+    const washerMaterial = ref(null)
+    const washerMaterialOptions = ref(['MS','SS304','SS316'])
+    const washerSize = ref(null)
+    const washerSizeOptions = ref(['M12','M16','M20','M22','M24'])
+    const washerType = ref(null)
+    const washerTypeOptions = ref(['Plain','Spring'])
+
+    const nutMaterial = ref(null)
+    const nutMaterialOptions = ref(['SS304','SS316','MS','Brass'])
+    const nutSize = ref(null)
+    const nutSizeOptions = ref(['M12','M16','M20','M22','M24'])
+
     const isSplitFlange = ref(false)
     const splitFlangetype = ref(null)
     const splitFlangeTypeOptions = ref(['-', 'Tapped', 'Drilled'])
@@ -1188,6 +1450,11 @@ export default {
     const manholeType = ref(null)
     const manholeTypeOptions = ref(['-', 'Dome with pad type', 'Dome with nozzle', 'Flat'])
     const manholeOther = ref(null)
+
+    const isBoltStud = ref(false)
+    const isWasher = ref(false)
+    const isNut = ref(false)
+    const fastenerSize = ref(null)
 
     const isToughenedGlass = ref(false)
     const toughenedGlassSize = ref(null)
@@ -1335,7 +1602,8 @@ export default {
         degree: '-',
         radius: '-',
         location: '',
-        fittings: []
+        fittings: [],
+        Fastner: [],
       })
     }
 
@@ -1369,6 +1637,36 @@ export default {
 
     function removeFitting(nozzleIndex, fittingIndex) {
         nozzles.value[nozzleIndex].fittings.splice(fittingIndex, 1);
+    }
+
+    function removeFastener(nozzleIndex, fastenerIndex) {
+      const nozzle = nozzles.value[nozzleIndex];
+      if (nozzle && Array.isArray(nozzle.Fastner)) {
+        nozzle.Fastner.splice(fastenerIndex, 1);
+      }
+    }
+
+    function addFastner(nozzleIndex) {
+      // reset everything when dialog opens for a new nozzle
+      isFastner.value = true;
+      FastnerType.value = null;
+      fastenerDrawingNumber.value = null;
+      fastenerItemCode.value = null;
+      fastenerSize.value = null;
+
+      // reset flags
+      isBoltStud.value = false;
+      isNut.value = false;
+      isWasher.value = false;
+
+      // assign index and default object
+      fastenerIndex.value = nozzleIndex;
+      Fastner.value = {
+        type: null,
+        material: 'Steel',
+        size: null,
+        length: 0
+      };
     }
 
     const searchMonoblockData = () => {
@@ -1419,38 +1717,48 @@ export default {
     }
 
     const fillMonoBlockData = (data) => {
-        id.value = data.id?data.id:null
-        osTos.value = data.osTos?data.osTos:null
-        bottomDishedEndThickness.value = data.bottomDishedEndThickness?data.bottomDishedEndThickness:null
-        innerShellThickness.value = data.innerShellThickness?data.innerShellThickness:null
-        topDishedEndThickness.value = data.topDishedEndThickness?data.topDishedEndThickness:null
-        spilageCollectionTray.value = data.spilageCollectionTray?data.spilageCollectionTray:null
-        insulationOnTop.value = data.insulationOnTop?data.insulationOnTop:null
-        liftingMOC.value = data.liftingMOC?data.liftingMOC:null
-        modelType.value = data.modelType?data.modelType:null
-        nozzles.value.splice(0, nozzles.value.length)
-        const result = {};
-        for (const [key, value] of Object.entries(data)) {
-            if (key.startsWith("nozzle_")) {
-                try {
-                result[key] = JSON.parse(value); // Parse JSON strings
-                nozzles.value.push({
-                    nozzleNo: result[key].nozzleNo,
-                    size: result[key].size,
-                    location: result[key].location,
-                    drillingStandard: result[key].drillingStandard,
-                    degree: result[key].degree,
-                    radius: result[key].radius,
-                    fittings: result[key].fittings
-                });
-                } catch (e) {
-                console.error(`Failed to parse ${key}:`, e);
-                result[key] = value;
-                }
-            } else {
-                result[key] = value; // Keep other top-level fields as is
-            }
+      id.value = data.id || null
+      osTos.value = data.osTos || null
+      bottomDishedEndThickness.value = data.bottomDishedEndThickness || null
+      innerShellThickness.value = data.innerShellThickness || null
+      topDishedEndThickness.value = data.topDishedEndThickness || null
+      spilageCollectionTray.value = data.spilageCollectionTray || null
+      insulationOnTop.value = data.insulationOnTop || null
+      liftingMOC.value = data.liftingMOC || null
+      modelType.value = data.modelType || null
+
+      // Clear existing nozzles
+      nozzles.value.splice(0, nozzles.value.length)
+      const result = {}
+
+      for (const [key, value] of Object.entries(data)) {
+        if (key.startsWith("nozzle_")) {
+          try {
+            const parsed = JSON.parse(value)
+            result[key] = parsed
+
+            // ✅ Make sure fittings and fasteners always exist as arrays
+            const fittings = Array.isArray(parsed.fittings) ? parsed.fittings : []
+            const fasteners = Array.isArray(parsed.Fastner) ? parsed.Fastner : []
+
+            nozzles.value.push({
+              nozzleNo: parsed.nozzleNo,
+              size: parsed.size,
+              location: parsed.location,
+              drillingStandard: parsed.drillingStandard,
+              degree: parsed.degree,
+              radius: parsed.radius,
+              fittings,
+              Fastner: fasteners   // ✅ Added fastener restoration here
+            })
+          } catch (e) {
+            console.error(`Failed to parse ${key}:`, e)
+            result[key] = value
+          }
+        } else {
+          result[key] = value
         }
+      }
     }
 
     const flattenForExcel = (obj) => {
@@ -1890,19 +2198,143 @@ export default {
       }
     }
 
-    const fillUpdatedData = (data) => {
-      if(data?.fittings){
-        console.log(data.fittings.model_info.itemCode)
-        fittingDrawingNumber.value = data.fittings.model_info.drawingNumber
-        fittingItemCode.value = data.fittings.model_info.itemCode
+    const searchFastner = (fastnerType) => {
+      let toSearchObject = null;
+
+      if (fastnerType === 'Bolt/Stud') {
+        toSearchObject = {
+          component: 'fastener',
+          boltStud: boltStud.value ? boltStud.value : null,
+          boltStudMaterial: boltStudMaterial.value ? boltStudMaterial.value : null,
+          boltStudSize: boltStudSize.value ? boltStudSize.value : null,
+          boltStudLength: boltStudLength.value ? boltStudLength.value : null
+        };
       }
-      else if(data !== null){
-        if(data.model_info.drawingNumber !== ""){
-          fittingDrawingNumber.value = data.model_info.drawingNumber
+
+      // Later we can extend with 'Nut', 'Washer', etc.
+      else if (fastnerType === 'Nut') {
+        toSearchObject = {
+          component: 'fastener_nut',
+          nutSize: nutSize.value ? nutSize.value : null,
+          nutMaterial: nutMaterial.value ? nutMaterial.value : null
+        };
+      }
+
+      else if (fastnerType === 'Washer') {
+        toSearchObject = {
+          component: 'washer',
+          washerType: washerType.value ? washerType.value : null,
+          washerSize: washerSize.value ? washerSize.value : null,
+          washerMaterial: washerMaterial.value ? washerMaterial.value : null
+        };
+      }
+
+      // Validate that all required fields are filled
+      const isNull = hasNull(toSearchObject);
+      if (isNull) {
+        $q.dialog({
+          title: '<span class="text-red">Alert</span>',
+          message: `Please enter all the values`,
+          color: 'red-5',
+          html: true
+        });
+      } else {
+        emit('search-data', toSearchObject);
+        console.log("Search object received:", toSearchObject);
+      }
+    };
+
+    // const fillUpdatedData = (data) => {
+    //   if(data?.fittings){
+    //     console.log(data.fittings.model_info.itemCode)
+    //     fittingDrawingNumber.value = data.fittings.model_info.drawingNumber
+    //     fittingItemCode.value = data.fittings.model_info.itemCode
+    //   }
+    //   else if(data !== null){
+    //     if(data.model_info.drawingNumber !== ""){
+    //       fittingDrawingNumber.value = data.model_info.drawingNumber
+    //     }
+    //     if(data.model_info.itemCode !== ""){
+    //       fittingItemCode.value = data.model_info.itemCode
+    //     }
+    //   }
+    // }
+
+    const fillUpdatedData = (data) => {
+      // 🧩 Case 1: fittings
+      if (data?.fittings) {
+        fittingDrawingNumber.value = data.fittings.model_info.drawingNumber || "";
+        fittingItemCode.value = data.fittings.model_info.itemCode || "";
+      }
+
+      // 🧩 Case 2: fasteners (structured form)
+      else if (
+        data?.fastener?.component === "fastener" ||
+        data?.fastener?.component === "washer" ||
+        data?.fastener?.component === "fastener_nut"
+      ) {
+        if (data.fastener?.model_info) {
+          fastenerDrawingNumber.value = data.fastener.model_info.drawingNumber || "";
+          fastenerItemCode.value = data.fastener.model_info.itemCode || "";
         }
-        if(data.model_info.itemCode !== ""){
-          fittingItemCode.value = data.model_info.itemCode
+      }
+
+      // 🧩 Case 3: generic fastener fallback (e.g. from search)
+      else if (
+        data?.component === "fastener" ||
+        data?.component === "washer" ||
+        data?.component === "fastener_nut"
+      ) {
+        if (data?.model_info) {
+          fastenerDrawingNumber.value = data.model_info.drawingNumber || "";
+          fastenerItemCode.value = data.model_info.itemCode || "";
         }
+      }
+
+      // 🧩 Case 4: generic fallback (fittings or other parts)
+      else if (data?.model_info) {
+        fittingDrawingNumber.value = data.model_info.drawingNumber || "";
+        fittingItemCode.value = data.model_info.itemCode || "";
+      }
+    };
+
+    const onUpdateFastener = (val) => {
+      // ✅ Clear only when the fastener type actually changes
+      if (FastnerType.value !== val) {
+        fastenerDrawingNumber.value = null
+        fastenerItemCode.value = null
+        FastnerType.value = val
+      }
+
+      // Reset all fastener type flags
+      isBoltStud.value = false
+      isNut.value = false
+      isWasher.value = false
+
+      // Get the selected nozzle (for size prefill)
+      const nozzle = nozzles.value[fastenerIndex.value]
+
+      switch (val) {
+        case 'Bolt/Stud':
+          isBoltStud.value = true
+          fastenerSize.value = nozzle?.size || ''
+          break
+
+        case 'Nut':
+          isNut.value = true
+          fastenerSize.value = nozzle?.size || ''
+          break
+
+        case 'Washer':
+          isWasher.value = true
+          fastenerSize.value = nozzle?.size || ''
+          break
+      }
+
+      // Optional: update the Fastner reactive object if it exists
+      if (Fastner.value) {
+        Fastner.value.type = val
+        Fastner.value.size = fastenerSize.value
       }
     }
 
@@ -1990,8 +2422,56 @@ export default {
       nozzles.value[fittingIndex.value].fittings.push(fittingData)
 
       // Optional: console log to verify
-      console.log('Added fitting:', JSON.stringify(fittingData, null, 2))
+      // console.log('Added fitting:', JSON.stringify(fittingData, null, 2))
+      // console.log("Updated nozzle:",JSON.stringify(nozzles.value[fittingIndex.value], null, 2));
     }
+
+    const addFastenerToList = (fastener) => {
+
+      console.log('addFastenerToList called. FastnerType:', FastnerType.value);
+      console.log('fastener param:', fastener);
+      console.log('fastenerDrawingNumber.value:', fastenerDrawingNumber.value);
+      console.log('fastenerItemCode.value:', fastenerItemCode.value);
+
+      // 1️⃣ Build the base fastener object
+      const fastenerData = {
+        name: fastener || null,
+        itemCode: fastenerItemCode.value || null,
+        drawingNumber: fastenerDrawingNumber.value || null,
+      };
+
+      // 2️⃣ Assign type/size/material/etc. depending on fastener type
+      switch (fastener) {
+        case 'Bolt/Stud':
+          fastenerData.size = boltStudSize.value;
+          fastenerData.length = boltStudLength.value;
+          fastenerData.material = boltStudLength.value;
+          break;
+
+        case 'Nut':
+          fastenerData.size = nutSize.value;
+          fastenerData.material = nutMaterial.value;
+          break;
+
+        case 'Washer':
+          fastenerData.size = washerSize.value;
+          fastenerData.type = washerType.value;
+          fastenerData.material = washerMaterial.value;
+          break;
+
+        // Add more fastener types as needed
+      }
+
+      // 3️⃣ Push into fasteners array of selected nozzle or component
+      if (!nozzles.value[fastenerIndex.value].Fastner) {
+        nozzles.value[fastenerIndex.value].Fastner = [];
+      }
+      nozzles.value[fastenerIndex.value].Fastner.push(fastenerData);
+
+      // 4️⃣ Optional debug
+      //  console.log("Updated nozzle:",JSON.stringify(nozzles.value[fastenerIndex.value], null, 2));
+    };
+
 
     const formatFittingLabel = (fitting) => {
       if (!fitting) return ''
@@ -2000,6 +2480,15 @@ export default {
       if (fitting.itemCode) label += ` (${fitting.itemCode})`
       return label
     }
+
+    const formatFastenerLabel = (fastener) => {
+      if (!fastener) return ''
+      let label = fastener.name || ''
+      if (fastener.size) label += ` - ${fastener.size}`
+      if (fastener.itemCode) label += ` (${fastener.itemCode})`
+      return label
+    }
+
 
     function hasNull(obj) {
         for (const key in obj) {
@@ -2047,6 +2536,8 @@ export default {
         removeNozzle,
         addFitting,
         removeFitting,
+        removeFastener,
+        addFastner,
         searchMonoblockData,
         prepareMonoblockData,
         flattenForExcel,
@@ -2215,15 +2706,47 @@ export default {
         bovSOV,
         bovOther,
 
+        // Fastners
+        isFastner,
+        FastnerType,
+        fastenerDrawingNumber,
+        fastenerItemCode,
+        fastnerTypeOptions,
+        boltStud,
+        boltStudTypeOptions,
+        boltStudMaterial,
+        boltStudMaterialOptions,
+        boltStudSize,
+        boltStudSizeOptions,
+        boltStudLength,
+
+        //washer
+        washerMaterial,
+        washerMaterialOptions,
+        washerSize,
+        washerSizeOptions,
+        washerType,
+        washerTypeOptions,
+
+        // nut
+        nutMaterial,
+        nutMaterialOptions,
+        nutSize,
+        nutSizeOptions,
+
         getBovMastrers,
         populateBovMasterData,
         onUpdateBovType,
         onUpdateBovModel,
         onUpdateFittings,
         searchFittings,
+        searchFastner,
         fillUpdatedData,
+        onUpdateFastener,
         addObjectToList,
+        addFastenerToList,
         formatFittingLabel,
+        formatFastenerLabel,
         hasNull
     }
   },
@@ -2240,6 +2763,14 @@ export default {
       handler(newVal) {
         if (newVal !== null) {
           this.fillUpdatedData(newVal)
+        }
+      },
+      immediate: true
+    },
+    fastenerData: {  // 👈 new watcher
+      handler(newVal) {
+        if (newVal !== null) {
+          this.fillUpdatedData(newVal);
         }
       },
       immediate: true

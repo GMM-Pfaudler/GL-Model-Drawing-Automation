@@ -233,6 +233,7 @@
                         <MonoblockComponent
                         :monoblock="monoblockOfnData"
                         :fittingsData="fittingsData"
+                        :fastenerData="fastenerData"
                         :bovMasters="bovMasters"
                         @get-bov-masters="getMasters"
                         @search-data="searchData"
@@ -1274,6 +1275,7 @@ export default {
   const monoblockDrawingNumber = ref(null)
   const monoblockItemCode = ref(null)
   const fittingsData = ref(null)
+  const fastenerData = ref(null)
 
   // Top Cover
   const topCoverOfnData = ref(null)
@@ -1885,6 +1887,7 @@ export default {
       monoblockDrawingNumber,
       monoblockItemCode,
       fittingsData,
+      fastenerData,
 
       // Top Cover
       topCoverOfnData,
@@ -2499,6 +2502,18 @@ export default {
             }
             this.insulationData = data
           }
+          else if (component === 'fastener' || component === 'washer' || component === 'fastener_nut') {
+            if (response.data.result === null) {
+              this.comp = component[0].toUpperCase() + component.substr(1)
+              this.drawingNumber = null
+              this.itemCode = null
+              this.isItemCodeNull = true
+            } else {
+              data.model_info.drawingNumber = response.data.result.drawingNumber.toString()
+              data.model_info.itemCode = response.data.result.itemCode.toString()
+            }
+            this.fastenerData = data
+          }
           else if(component === 'drivebasering'
           || component === 'padplate'
           || component === 'lanternsupport'
@@ -2571,6 +2586,11 @@ export default {
         else if(this.comp.toLowerCase() === 'monoblock') {
           this.monoblockData.model_info = model_info
           objToSave = {[this.comp.toLowerCase()]: this.monoblockData}
+        }
+        else if (this.comp.toLowerCase() === 'fastener' || this.comp.toLowerCase() === 'washer' || this.comp.toLowerCase() === 'fastener_nut')
+        {
+          this.fastenerData.model_info = model_info
+          objToSave = { [this.comp.toLowerCase()]: this.fastenerData }
         }
         else if(this.comp.toLowerCase() === 'gasket'
           || this.comp.toLowerCase() === 'split flange' 
@@ -2739,6 +2759,9 @@ export default {
             else if(this.comp.toLowerCase() === 'topcover') {
               this.topCoverDrawingNumber = this.drawingNumber
               this.topCoverItemCode = this.itemCode
+            }
+            else if (this.comp.toLowerCase() === 'fastener' || this.comp.toLowerCase() === 'washer' || this.comp.toLowerCase() === 'nut') {
+              this.fastenerData = {fastener: this.fastenerData}
             }
             else if(this.comp.toLowerCase() === 'pan') {
               this.panDrawingNumber = this.drawingNumber
