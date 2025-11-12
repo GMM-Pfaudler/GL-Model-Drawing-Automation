@@ -1583,16 +1583,16 @@ export default {
     const standardDegree = ref(['0', '60', '95', '135', '180', '225', '265', '300', '-', '-'])
     
     // const statndardFittings = ref([])
-    // ['DN500 Gasket', 'PTFE Bush Type Ring', 'Manhole Cover', 'DN100 Gasket', 'DN100 Toughened Glass', 'DN100 Sight Glass Flange'],
-    // ['DN150 Split Flange', 'DN150 gasket', 'DN150 Wooden Blind Cover'],
-    // ['DN150 Split Flange', 'DN150 gasket', 'DN150 Wooden Blind Cover'],
-    // ['DN250 Split Flange', 'DN250 gasket', 'DN150 Wooden Blind Cover'],
-    // ['DN150 Split Flange', 'DN150 gasket', 'DN150 Toughened Glass', 'DN150 Light Glass Flange'],
-    // ['DN250 Split Flange', 'DN250 gasket', 'Baffle'],
-    // ['DN150 Split Flange', 'DN150 gasket', 'DN150 Wooden Blind Cover'],
-    // ['DN150 Split Flange', 'DN150 gasket', 'DN150 Wooden Blind Cover'],
-    // ['Mechanical Seal', 'Agitator', 'Pad Plate'],
-    // ['DN150 Split Flange', 'DN150 Gasket', 'BOV']
+    // N1: ['DN500 Gasket', 'PTFE Bush Type Ring', 'Manhole Cover', 'DN100 Gasket', 'DN100 Toughened Glass', 'DN100 Sight Glass Flange'],
+    // N2: ['DN150 Split Flange', 'DN150 gasket', 'DN150 Wooden Blind Cover'],
+    // N3: ['DN150 Split Flange', 'DN150 gasket', 'DN150 Wooden Blind Cover'],
+    // N5: ['DN250 Split Flange', 'DN250 gasket', 'DN150 Wooden Blind Cover'],
+    // N6: ['DN150 Split Flange', 'DN150 gasket', 'DN150 Toughened Glass', 'DN150 Light Glass Flange'],
+    // N7: ['DN250 Split Flange', 'DN250 gasket', 'Baffle'],
+    // N9: ['DN150 Split Flange', 'DN150 gasket', 'DN150 Wooden Blind Cover'],
+    // N10: ['DN150 Split Flange', 'DN150 gasket', 'DN150 Wooden Blind Cover'],
+    // M: ['Mechanical Seal', 'Agitator', 'Pad Plate'],
+    // L: ['DN150 Split Flange', 'DN150 Gasket', 'BOV']
 
     const addNozzle = () => {
       nozzles.value.push({

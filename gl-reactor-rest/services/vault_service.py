@@ -48,11 +48,13 @@ class Vault:
                     continue
 
                 if not os.path.exists(path):
-                    content = base64.b64decode(base64_content)
                     os.makedirs(os.path.dirname(path), exist_ok=True)
-                    with open(path, "wb") as f:
-                        f.write(content)
+                content = base64.b64decode(base64_content)
+                os.chmod(path, 0o666)
+                with open(path, "wb") as f:
+                    f.write(content)
 
+                
                 # Add subcomponent from original item_codes list
                 subcomponent = subcomponent_map.get(itemcode)
 

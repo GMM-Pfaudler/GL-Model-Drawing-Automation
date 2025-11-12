@@ -130,7 +130,7 @@ async def generate_model(request: Request):
     try:
         details = await request.json()
         result = generation_service.generate_model(model_details=details)
-        return {"r": result}
+        return {"result": result}
     except Exception as e:
         print("Exception: ", e)
         raise HTTPException(status_code=500, detail='Something went wrong with model generation.')
@@ -145,3 +145,14 @@ async def open_component(request: Request):
         print("Exception: ", e)
         raise HTTPException(status_code=500, detail='Something went wrong with model generation.')
     
+# OFN Endpoints
+@router.post("/getmodel")
+async def get_standard_model(request: Request):
+    try:
+        model_details = await request.json()
+        print(model_details)
+        # result = ofn_service.get_ofn_by_sfon(sfon=sfon_details['sfon'])
+        # return {"ofn_details": result}
+    except Exception as e:
+        print("Exception: ", e)
+        raise HTTPException(status_code=500, detail='Something went wrong with getting ofn details by sfon.')
