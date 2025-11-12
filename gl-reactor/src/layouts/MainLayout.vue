@@ -44,6 +44,9 @@
             <div class="item-center">
               <q-btn @click="prompt('Dashboard')" outline color="primary" dense label="Get OFN" />
             </div>
+            <div class="item-center">
+              <q-btn @click="modelPrompt('Model')" outline color="primary" dense label="Get Model" />
+            </div>
             <div class="row items-center q-gutter-sm">
               <!-- <q-chip square outline text-color="black">
                 Sales Order Number
@@ -958,6 +961,40 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <q-dialog v-model="isGetModel" class="">
+      <q-card style="width: 500px; max-width: 80vw;">
+        <q-toolbar>
+          <q-avatar>
+            <img src="https://cdn.quasar.dev/logo-v2/svg/logo.svg">
+          </q-avatar>
+
+          <q-toolbar-title><span class="text-weight-bold">Glass Lined</span> Standard Model</q-toolbar-title>
+
+          <q-btn flat round dense icon="close" v-close-popup />
+        </q-toolbar>
+
+        <q-card-section>
+          <div class="q-mb-md">
+            <div class="row q-gutter-md q-wrap">
+              <q-select class="col-12 col-md-5" outlined dense color="blue" v-model="reactorType" :options="reactorTypeOptions" label="Reactor">
+                <template v-if="reactorType" v-slot:append>
+                  <q-icon name="cancel" @click.stop.prevent="reactorType = null" class="cursor-pointer" />
+                </template>
+              </q-select>
+              <q-select class="col-12 col-md-5" outlined dense color="blue" v-model="modelType" :options="modelTypeOptions" label="Model">
+                <template v-if="modelType" v-slot:append>
+                  <q-icon name="cancel" @click.stop.prevent="modelType = null" class="cursor-pointer" />
+                </template>
+              </q-select>
+            </div>
+          </div>
+        </q-card-section>
+        <q-card-section style="text-align:center;">
+          <q-btn outline color="primary" label="Submit" @click="getStandardModel" v-close-popup/>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
@@ -1260,6 +1297,11 @@ export default {
   const isSalesOrderNumberNull = ref(false)
   const drawingNumber = ref(null)
   const itemCode = ref(null)
+  const isGetModel = ref(false)
+  const reactorType = ref(null)
+  const reactorTypeOptions = ref(["-", "CE_6300L"])
+  const modelType = ref(null)
+  const modelTypeOptions = ref(["-", "MSGL Reactor"])
   
   // Agitator
   const agitatorOfnData = ref(null)
@@ -1496,6 +1538,19 @@ export default {
           // console.log('I am triggered on both OK and Cancel')
         })
       }
+    }
+
+    const modelPrompt = (clickedItem) => {
+      if (clickedItem === 'Model'){
+        isGetModel.value = true
+        reactorType.value = null
+        modelType.value = null
+      }
+    }
+
+    const getStandardModel = () => {
+      console.log("Reactor Type: ",  reactorType.value)
+      console.log("Model Type: ",  modelType.value)
     }
 
     const getOFNDetails = (sfno) => {
@@ -1817,6 +1872,7 @@ export default {
       if(sono.value === null || sono.value === "" || sono.value === ''){
         isSalesOrderNumberNull.value = true
       }else{
+        // $q.loading.show()
         const sonoDetails = {sono: sono.value, model: model.value, reactor: reactor.value, capacity: capacity.value}
         axios.post(host.value + '/api/v1/generate', JSON.stringify({details: sonoDetails}), {
           headers: {
@@ -1829,6 +1885,7 @@ export default {
               message: 'Successfully saved information.',
               color: 'green-5'
             })
+            // $q.loading.hide()
           }
         })
         .catch(error => { 
@@ -1872,6 +1929,11 @@ export default {
       isSalesOrderNumberNull,
       drawingNumber,
       itemCode,
+      isGetModel,
+      reactorType,
+      reactorTypeOptions,
+      modelType,
+      modelTypeOptions,
 
       // Agitator
       agitatorOfnData,
@@ -2035,10 +2097,12 @@ export default {
       motorData,
       motorDrawingNumber,
       motorItemCode,
-      motorMasters,
+      motorMasters,      
 
       // Methods
       prompt,
+      modelPrompt,
+      getStandardModel,
       showTab,
       onUpdateTab,
       onUpdateModelType,
@@ -2233,6 +2297,7 @@ export default {
             this.sensorData = data
           }
           else if(component === 'shaftclosure'){
+            // Mechanical Seal
             if(response.data.result === null){
               this.comp = component[0].toUpperCase() + component.substr(1)
               this.shaftclosureDrawingNumber = null
@@ -3015,7 +3080,7 @@ export default {
       },
 
       async saveSensorData(data){
-        data.one.model_info = {
+        data.model_info = {
             capacity: this.capacity,
             model: this.model,
             reactor: this.reactor,
@@ -3023,30 +3088,6 @@ export default {
             ndt: this.ndt,
             designPressure: this.designPressure,
             designTemperature: this.designTemperature,
-            drawingNumber: data.one.rtdDrawingNumberOne,
-            itemCode: data.one.rtdItemCodeOne
-        }
-        data.two.model_info = {
-            capacity: this.capacity,
-            model: this.model,
-            reactor: this.reactor,
-            glass: this.glass,
-            ndt: this.ndt,
-            designPressure: this.designPressure,
-            designTemperature: this.designTemperature,
-            drawingNumber: data.two.rtdDrawingNumberTwo,
-            itemCode: data.two.rtdItemCodeTwo
-        }
-        data.dialThermo.model_info = {
-            capacity: this.capacity,
-            model: this.model,
-            reactor: this.reactor,
-            glass: this.glass,
-            ndt: this.ndt,
-            designPressure: this.designPressure,
-            designTemperature: this.designTemperature,
-            drawingNumber: data.dialThermo.dialThermoDrawingNumber,
-            itemCode: data.dialThermo.dialThermoItemCode
         }
         this.saveToJsonFile('sensor', data)
         this.sensorData = data

@@ -210,8 +210,12 @@ class Generation:
     #     return flat_list
 
     def flatten_components(self, data):
+        id = 0
         flat_list = []
-
+        target_components = {
+            'namePlateBracket', 'driveHood', 'diaphragmRing', 'springBalanceAssembly',
+            'MHCClamp', 'coc', 'bfCClamp', 'agitator', 'shaftclosure', 'gearbox', 'motor'
+        }
         def normalize_name(name):
             """Normalize component or fitting names: lowercase + underscores for spaces/special chars."""
             return re.sub(r'[^a-zA-Z0-9]+', '_', name.strip().lower()).strip('_')
@@ -219,7 +223,7 @@ class Generation:
         for comp_dict in data:
             component_name = next(iter(comp_dict))
             if component_name == 'monoblock':
-                'monoblock'
+                id = 0
                 for comp_key, comp_val in comp_dict.items():
                     # Normalize top-level component name
                     comp_name = normalize_name(comp_key)
@@ -230,8 +234,10 @@ class Generation:
                     drawingnumber = model_info.get('drawingNumber', '')
                     model = model_info.get('model', '')
 
+                    id += 1
                     # Add main component
                     flat_list.append({
+                        'id': id,
                         'comp': comp_name,
                         'partnumber': drawingnumber,
                         'member': '',
@@ -251,36 +257,47 @@ class Generation:
                             size = nozzle_data.get('size', '')
                             degree = nozzle_data.get('degree', '')
                             fittings = nozzle_data.get('fittings', [])
+                            fasteners = nozzle_data.get('Fastner', [])  # ✅ handle fasteners too
 
-                            for fitting in fittings:
+                            # Combine fittings + fasteners
+                            all_subs = fittings + fasteners
+
+                            for fitting in all_subs:
                                 fname_raw = fitting.get('name', '')
                                 fname = normalize_name(fname_raw)
                                 fitemcode = fitting.get('itemCode', '')
                                 fdrawing = fitting.get('drawingNumber', '')
 
-                                # Skip if degree is '-' or empty
+                                # Construct component name
                                 if degree in ('', '-', None):
                                     comp_name_full = f"{nozzle_no}_{size}_{fname}"
                                 else:
                                     comp_name_full = f"{nozzle_no}_{size}_{degree}_{fname}"
 
+                                fitting_comp = normalize_name(comp_name_full)
+
+                                id += 1
                                 flat_list.append({
-                                    'comp': normalize_name(comp_name_full),
+                                    'id': id,
+                                    'comp': fitting_comp,
                                     'partnumber': fdrawing,
                                     'member': '',
                                     'itemcode': fitemcode,
                                     'sub_components': []
                                 })
 
+
             if component_name == 'jacket':
-                'jacket'
+                
                 jacket_data = comp_dict['jacket']
                 comp_name = jacket_data.get('component', 'Unknown')
 
                 # Jacket itself
                 if 'jacket' in jacket_data:
+                    id = id + 1
                     j = jacket_data['jacket']
                     flat_list.append({
+                        'id': id,
                         'comp': normalize_name(comp_name),
                         'partnumber': j.get('drawingNumberJacket', ''),
                         'member': '',
@@ -290,8 +307,10 @@ class Generation:
 
                 # Support
                 if 'support' in jacket_data:
+                    id = id + 1
                     s = jacket_data['support']
                     flat_list.append({
+                        'id': id,
                         'comp': normalize_name(s.get('component', 'Support')),
                         'partnumber': s.get('drawingNumberJacketSupport', ''),
                         'member': '',
@@ -301,8 +320,10 @@ class Generation:
 
                 # Earthing
                 if 'earthing' in jacket_data:
+                    id = id + 1
                     e = jacket_data['earthing']
                     flat_list.append({
+                        'id': id,
                         'comp': normalize_name('Earthing'),
                         'partnumber': e.get('drawingNumberJacketEarthing', ''),
                         'member': '',
@@ -313,7 +334,9 @@ class Generation:
                 # Nozzles (list)
                 if 'nozzles' in jacket_data:
                     for n in jacket_data['nozzles']:
+                        id = id + 1
                         flat_list.append({
+                            'id': id,
                             'comp': normalize_name(f"{component_name} Nozzle {n.get('nozzle', '')}"),
                             'partnumber': n.get('drawingNumber', ''),
                             'member': '',
@@ -333,8 +356,10 @@ class Generation:
                         continue  # skip metadata
                     
                     if isinstance(sub_data, dict):
+                        id = id + 1
                         model_info = sub_data.get('model_info', {})
                         flat_list.append({
+                            'id': id,
                             'comp': normalize_name(f"{comp_name}  {sub_key.capitalize()}"),
                             'partnumber': model_info.get('drawingNumber', ''),
                             'member': '',
@@ -357,8 +382,9 @@ class Generation:
                         # Try to find drawingNumber and itemCode (the keys can vary slightly)
                         drawing_number = next((v for k, v in sub_data.items() if 'drawingNumber' in k), None)
                         item_code = next((v for k, v in sub_data.items() if 'itemCode' in k), None)
-
+                        id = id + 1
                         flat_list.append({
+                            'id': id,
                             'comp': normalize_name(f"{comp_name} {sub_key}"),
                             'partnumber': drawing_number or '',
                             'member': '',
@@ -375,7 +401,9 @@ class Generation:
                 # Handle nozzle list
                 if 'nozzles' in data:
                     for nozzle in data['nozzles']:
+                        id = id + 1
                         flat_list.append({
+                            'id': id,
                             'comp': normalize_name(f"{comp_name} {nozzle.get('nozzle', '')}"),
                             'partnumber': nozzle.get('drawingNumber', ''),
                             'member': '',
@@ -383,7 +411,7 @@ class Generation:
                             'sub_components': []
                         })
             
-            if comp_name == 'insulation':
+            if component_name == 'insulation':
                 key = next(iter(comp_dict))
                 data = comp_dict[key]
 
@@ -398,8 +426,9 @@ class Generation:
                         # Find the drawing number and item code
                         drawing_number = next((v for k, v in sub_data.items() if 'drawingNumber' in k), None)
                         item_code = next((v for k, v in sub_data.items() if 'itemCode' in k), None)
-
+                        id = id + 1
                         flat_list.append({
+                            'id': id,
                             'comp': normalize_name(f"{comp_name} {sub_key[0].upper() + sub_key[1:]}"),
                             'partnumber': drawing_number or '',
                             'member': '',
@@ -407,14 +436,17 @@ class Generation:
                             'sub_components': []
                         })
 
-            if component_name == 'namePlateBracket' or component_name == 'driveHood' or component_name == 'diaphragmRing' or component_name =='springBalanceAssembly' or component_name =='MHCClamp' or component_name =='coc' or component_name =='bfCClamp' or component_name == 'agitator' or component_name == 'shaftclosure' or component_name == 'gearbox' or component_name == 'motor':
-                key = next(iter(comp_dict))
-                data = comp_dict[key]
-
+            if component_name in target_components:
+                key, data = next(iter(comp_dict.items()))
+                
                 comp_name = data.get('component', key)
                 model_info = data.get('model_info', {})
 
+                'namePlateBracket', 'driveHood', 'diaphragmRing', 'springBalanceAssembly',
+                'MHCClamp', 'coc', 'bfCClamp', 'agitator', 'shaftclosure', 'gearbox', 'motor'
+                id = id + 1
                 flat_list.append({
+                    'id': id,
                     'comp': normalize_name(comp_name),
                     'partnumber': model_info.get('drawingNumber', ''),
                     'member': '',
@@ -424,8 +456,150 @@ class Generation:
             
         return flat_list
 
+    def build_standard_model(self, data):
+        """Build standardized model structure from list of component dicts."""
+
+        # Initialize base structure
+        standard_model = {
+            "reactor": "",
+            "model": "",
+            "model_info": {
+                "glass": "",
+                "ndt": "",
+                "temp": "",
+                "pressure": ""
+            },
+            "components": {}
+        }
+
+        component_index = 1
+
+        for item in data:
+            component_name, component_data = next(iter(item.items()))
+
+            # --- Common model_info extraction ---
+            model_info = component_data.get("model_info", {})
+            if model_info:
+                standard_model["reactor"] = model_info.get("model", "")
+                standard_model["model"] = model_info.get("reactor", "")
+                standard_model["model_info"]["glass"] = model_info.get("glass", "")
+                standard_model["model_info"]["ndt"] = model_info.get("ndt", "")
+                standard_model["model_info"]["temp"] = model_info.get("designTemperature", "")
+                standard_model["model_info"]["pressure"] = model_info.get("designPressure", "")
+
+            configurations = {}
+
+            # --- Component-specific parsing logic ---
+            if component_name.lower() == "monoblock":
+                configurations = {
+                    "id": component_data.get("id", ""),
+                    "osTOos": component_data.get("osTos", ""),
+                    "insulation_on_top": component_data.get("insulationOnTop", ""),
+                    "spillage_collection_tray": component_data.get("spilageCollectionTray", ""),
+                    "lifting_moc": component_data.get("liftingMOC", ""),
+                    "top_dished_end_thickness": component_data.get("topDishedEndThickness", ""),
+                    "inner_shell_thickness": component_data.get("innerShellThickness", ""),
+                    "bottom_dished_end_thickness": component_data.get("bottomDishedEndThickness", ""),
+                    "drawing_number": model_info.get("drawingNumber", ""),
+                    "item_code": model_info.get("itemCode", "")
+                }
+
+                # Parse nozzles (JSON strings)
+                nozzles = {}
+                for k, v in component_data.items():
+                    if k.startswith("nozzle_"):
+                        try:
+                            nozzle_dict = json.loads(v)
+                            idx = len(nozzles) + 1
+                            nozzles[idx] = {
+                                "nozzle_name": nozzle_dict.get("nozzleNo", ""),
+                                "size": nozzle_dict.get("size", ""),
+                                "drilling_standard": nozzle_dict.get("drillingStandard", ""),
+                                "degree": nozzle_dict.get("degree", ""),
+                                "radius": nozzle_dict.get("radius", ""),
+                                "location": nozzle_dict.get("location", ""),
+                                "fittings": nozzle_dict.get("fittings", {})
+                            }
+                        except json.JSONDecodeError:
+                            continue
+                configurations["nozzles"] = nozzles
+
+            elif component_name.lower() == "jacket":
+                jacket_data = component_data.get("jacket", {})
+                support_data = component_data.get("support", {})
+                earthing_data = component_data.get("earthing", {})
+                nozzle_list = component_data.get("nozzles", [])
+
+                configurations = {
+                    "jacket": jacket_data,
+                    "support": support_data,
+                    "earthing": earthing_data,
+                }
+
+                # Add jacket nozzles
+                nozzles = {}
+                for i, n in enumerate(nozzle_list, start=1):
+                    nozzles[i] = {
+                        "nozzle_name": n.get("nozzle", ""),
+                        "size": n.get("size", ""),
+                        "degree": n.get("degree", ""),
+                        "location": n.get("location", ""),
+                        "drawing_number": n.get("drawingNumber", ""),
+                        "item_code": n.get("itemCode", "")
+                    }
+                configurations["nozzles"] = nozzles
+
+            elif component_name.lower() == "diaphragmring":
+                print(component_name.lower())
+                configurations = {
+                    "ring_material": component_data.get("ringMaterial", ""),
+                    "nozzle_size": component_data.get("nozzleSize", ""),
+                    "drawing_number": component_data.get("model_info", "").get("drawingNumber", ""),
+                    "item_code": component_data.get("model_info", "").get("itemCode", "")
+                }
+
+            elif component_name.lower() == "springbalanceassembly":
+                configurations = {
+                    "assembly_name": component_data.get("mhCoverBalanceAssembly", ""),
+                    "assembly_size": component_data.get("springbalanceassemblySize", ""),
+                    "assembly_type": component_data.get("springbalanceassemblyType", ""),
+                    "assembly_material": component_data.get("springbalanceassemblyMaterial", ""),
+                    "drawing_number": component_data.get("model_info", "").get("drawingNumber", ""),
+                    "item_code": component_data.get("model_info", "").get("itemCode", "")
+                }
+
+            elif component_name.lower() == "mhcclamp":
+                configurations = {
+                    "material": component_data.get("mhCClampMaterial", ""),
+                    "size": component_data.get("mhCClampSize", ""),
+                    "drawing_number": component_data.get("model_info", "").get("drawingNumber", ""),
+                    "item_code": component_data.get("model_info", "").get("itemCode", "")
+                }
+
+            elif component_name.lower() == "coc":
+                configurations = {
+                    "coc_size": component_data.get("cocSize", ""),
+                    "drawing_number": component_data.get("model_info", "").get("drawingNumber", ""),
+                    "item_code": component_data.get("model_info", "").get("itemCode", "")
+                }
+
+            else:
+                # fallback: include all simple key-values
+                configurations = {k: v for k, v in component_data.items() if not isinstance(v, (dict, list))}
+
+            # Add component into main dict
+            standard_model["components"][component_index] = {
+                "component": component_name,
+                "configurations": configurations
+            }
+            component_index += 1
+
+        return standard_model
+
+
     def generate_model(self, model_details):
         components = self.get_component_list(model_details=model_details)
+        standard_model = self.build_standard_model(data = components)
         # component_item_codes = self.flatten_components(data=components)
         # print(component_item_codes)
         # # result = self.process_components(data=components)
@@ -443,7 +617,8 @@ class Generation:
                                 {'id':6, 'comp': 'jacketnozzle_shell', 'partnumber': '', 'member': '', 'itemcode':'5621-1035', 'sub_components': []}, # done
                                 {'id':7, 'comp': 'jacketnozzle_bottom', 'partnumber': '', 'member': '', 'itemcode':'5621-1036', 'sub_components': []}, # done
                                 {'id':8, 'comp': 'ms_coupling', 'partnumber': '', 'member': 'SA105_COUPLING_50L_96-GPF-7236-17834 R3.iam', 'itemcode':'', 'sub_components': []}, #5617NS0028 # air-vent
-                                {'id':9, 'comp': 'baffle_plate', 'partnumber': '', 'member': '', 'itemcode':'3502B0099', 'sub_components': []}, # add to jacket nozzle
+                                {'id':9, 'comp': 'baffle_plate', 'partnumber': '', 'member': '', 'itemcode':'3502B0108', 'sub_components': []}, # add to jacket nozzle for btm
+                                {'id':9.1, 'comp': 'baffle_bend_plate', 'partnumber': '', 'member': '', 'itemcode':'3502B0099', 'sub_components': []}, # add to jacket nozzle for shell
 
                                 # Manhole
                                 {'id':10, 'comp': 'manhole_gasket_1', 'partnumber': '', 'member': '', 'itemcode':'T1-0086', 'sub_components': []},
@@ -536,11 +711,8 @@ class Generation:
                                 {'id':72, 'comp': 'n10_150_300_nut', 'partnumber': '', 'member': '', 'itemcode':'13CSNT-0007', 'sub_components': []},
                                 ]
         downloaded_components_files = self.vault.find_files_by_item_codes(item_codes=component_item_codes)
-        res = self.inventor.generate(components=downloaded_components_files, model_details=model_details)
-        print(res)
-        print(downloaded_components_files)
-        return "Model Generated"
-    
+        is_generated = self.inventor.generate(components=downloaded_components_files, model_details=model_details)
+        return is_generated
     def open_component(self, compo_details):
         components = self.get_component_list(model_details=compo_details)
         item_code = self.get_item_code_by_component(components=components, comp_details=compo_details)
@@ -548,60 +720,3 @@ class Generation:
         print(downloaded_components_files)
         result = self.inventor.open(downloaded_components_files)
         return result
-    
-
-    # {'comp': 'n1_500_0', 'partnumber': '', 'member': '', 'itemcode':'', 'sub_components': [
-    #     {'comp': 'n1_split_flange', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n1_gasket', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n1_blind_cover', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n1_other', 'partnumber': '', 'member': '', 'itemcode':''},
-    # ]},
-    # {'comp': 'n2_150_60', 'partnumber': '', 'member': '', 'itemcode':'', 
-    #     'sub_components': [
-    #     {'comp': 'n2_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0360', 'sub_components': []},
-    #     {'comp': 'n2_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0364', 'sub_components': []},
-    #     {'comp': 'n2_blind_cover', 'partnumber': '', 'member': '', 'itemcode':'7058-0019', 'sub_components': []},
-    #     {'comp': 'n2_other', 'partnumber': '', 'member': '', 'itemcode':'', 'sub_components': []},
-    # ]},
-    # {'comp': 'n3_150_95', 'partnumber': '', 'member': '', 'itemcode':'', 
-    #     'sub_components': [
-    #     {'comp': 'n3_split_flange', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n3_gasket', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n3_blind_cover', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n3_other', 'partnumber': '', 'member': '', 'itemcode':''},
-    # ]},
-    # {'comp': 'n5_250_135', 'partnumber': '', 'member': '', 'itemcode':'', 
-    #     'sub_components': [
-    #     {'comp': 'n5_split_flange', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n5_gasket', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n5_blind_cover', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n5_other', 'partnumber': '', 'member': '', 'itemcode':''},
-    # ]},
-    # {'comp': 'n6_150_180', 'partnumber': '', 'member': '', 'itemcode':'', 
-    #     'sub_components': [
-    #     {'comp': 'n6_split_flange', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n6_gasket', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n6_blind_cover', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n6_other', 'partnumber': '', 'member': '', 'itemcode':''},
-    # ]},
-    # {'comp': 'n7_250_225', 'partnumber': '', 'member': '', 'itemcode':'', 
-    #     'sub_components': [
-    #     {'comp': 'n7_split_flange', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n7_gasket', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n7_blind_cover', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n7_other', 'partnumber': '', 'member': '', 'itemcode':''},
-    # ]},
-    # {'comp': 'n9_150_265', 'partnumber': '', 'member': '', 'itemcode':'', 
-    #     'sub_components': [
-    #     {'comp': 'n9_split_flange', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n9_gasket', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n9_blind_cover', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n9_other', 'partnumber': '', 'member': '', 'itemcode':''},
-    # ]},
-    # {'comp': 'n10_150_300', 'partnumber': '', 'member': '', 'itemcode':'', 
-    #     'sub_components': [
-    #     {'comp': 'n10_split_flange', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n10_gasket', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n10_blind_cover', 'partnumber': '', 'member': '', 'itemcode':''},
-    #     {'comp': 'n10_other', 'partnumber': '', 'member': '', 'itemcode':''},
-    # ]},
