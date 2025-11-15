@@ -961,42 +961,105 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
-
-    <q-dialog v-model="isGetModel" class="">
-      <q-card style="width: 500px; max-width: 80vw;">
+    <q-dialog v-model="isGetModel">
+      <q-card style="width: 600px; max-width: 90vw;">
+        <!-- Header -->
         <q-toolbar>
           <q-avatar>
             <img src="https://cdn.quasar.dev/logo-v2/svg/logo.svg">
           </q-avatar>
 
-          <q-toolbar-title><span class="text-weight-bold">Glass Lined</span> Standard Model</q-toolbar-title>
+          <q-toolbar-title>
+            <span class="text-weight-bold">Glass Lined</span> Standard Model
+          </q-toolbar-title>
 
           <q-btn flat round dense icon="close" v-close-popup />
         </q-toolbar>
 
+        <!-- Form Section -->
         <q-card-section>
-          <div class="q-mb-md">
-            <div class="row q-gutter-md q-wrap">
-              <q-select class="col-12 col-md-5" outlined dense color="blue" v-model="reactorType" :options="reactorTypeOptions" label="Reactor">
-                <template v-if="reactorType" v-slot:append>
-                  <q-icon name="cancel" @click.stop.prevent="reactorType = null" class="cursor-pointer" />
-                </template>
-              </q-select>
-              <q-select class="col-12 col-md-5" outlined dense color="blue" v-model="modelType" :options="modelTypeOptions" label="Model">
-                <template v-if="modelType" v-slot:append>
-                  <q-icon name="cancel" @click.stop.prevent="modelType = null" class="cursor-pointer" />
-                </template>
-              </q-select>
-            </div>
+          <div class="row q-col-gutter-md no-wrap justify-between">
+            <!-- Reactor -->
+            <q-select
+              class="col-4"
+              outlined
+              dense
+              color="blue"
+              v-model="reactorType"
+              :options="reactorTypeOptions"
+              label="Reactor"
+            >
+              <template v-if="reactorType" v-slot:append>
+                <q-icon
+                  name="cancel"
+                  @click.stop.prevent="reactorType = null"
+                  class="cursor-pointer"
+                />
+              </template>
+            </q-select>
+
+            <!-- Model -->
+            <q-select
+              class="col-4"
+              outlined
+              dense
+              color="blue"
+              v-model="modelType"
+              :options="modelTypeOptions"
+              label="Model"
+            >
+              <template v-if="modelType" v-slot:append>
+                <q-icon
+                  name="cancel"
+                  @click.stop.prevent="modelType = null"
+                  class="cursor-pointer"
+                />
+              </template>
+            </q-select>
+
+            <!-- Standard (GMP / NON-GMP) -->
+            <q-select
+              class="col-4"
+              outlined
+              dense
+              color="blue"
+              v-model="standardType"
+              :options=standardTypeOptions
+              label="Standard"
+            >
+              <template v-if="standardType" v-slot:append>
+                <q-icon
+                  name="cancel"
+                  @click.stop.prevent="standardType = null"
+                  class="cursor-pointer"
+                />
+              </template>
+            </q-select>
           </div>
         </q-card-section>
-        <q-card-section style="text-align:center;">
-          <q-btn outline color="primary" label="Submit" @click="getStandardModel" v-close-popup/>
-        </q-card-section>
+
+        <!-- Submit Button (Bottom Right) -->
+        <q-card-actions align="right">
+          <q-btn
+            outline
+            color="primary"
+            label="Submit"
+            @click="getStandardModel"
+            v-close-popup
+          />
+        </q-card-actions>
       </q-card>
     </q-dialog>
   </div>
 </template>
+<!-- 
+1) GMP stands for Good Manufacturing Practice.
+It’s a set of regulations and design principles intended to ensure product quality, safety, and traceability — 
+especially for pharmaceutical, biotech, food, and cosmetics industries. 
+
+2) Non-GMP (also called Standard Industrial Models) are used in chemical, paint, resin, and bulk industries, 
+where the stringent cleanliness and validation standards are not required.
+-->
 
 <script>
 
@@ -1302,6 +1365,8 @@ export default {
   const reactorTypeOptions = ref(["-", "CE_6300L"])
   const modelType = ref(null)
   const modelTypeOptions = ref(["-", "MSGL Reactor"])
+  const standardType = ref(null)
+  const standardTypeOptions = ref(['GMP', 'NON-GMP'])
   
   // Agitator
   const agitatorOfnData = ref(null)
@@ -1934,6 +1999,8 @@ export default {
       reactorTypeOptions,
       modelType,
       modelTypeOptions,
+      standardType,
+      standardTypeOptions,
 
       // Agitator
       agitatorOfnData,
