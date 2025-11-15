@@ -1,18 +1,17 @@
 from repositories.mongo_db import Mongo
 from pymongo.errors import PyMongoError
-class mongoService ():
+class MongoService ():
     def __init__(self):
-        self.db = Mongo()
+        self.db = Mongo(db="testdb")
 
     def insert_or_create_collection(self, collection_name, document):
         """
         Insert a document into a collection. If the collection does not exist, it will be created automatically.
         """
         try:
-            collection = self.db[collection_name]  # MongoDB will create this collection if it doesn't exist
-            result = collection.insert_one(document)
-            print(f"Document inserted with ID: {result.inserted_id}")
-            return str(result.inserted_id)
+            result_id = self.db.insert(collection_name=collection_name, document=document)
+            print(f"Document inserted with ID: {result_id}")
+            return str(result_id)
         except PyMongoError as e:
             print(f"Error inserting document: {e}")
             return None

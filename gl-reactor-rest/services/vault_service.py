@@ -27,7 +27,7 @@ class Vault:
 
             result = response.json()
 
-            for item in result:
+            for idx, item in enumerate(result):
                 initial_path = item.get("filepath")
                 parts = initial_path.split(os.sep)
                 # Insert "Vault" before "Designs"
@@ -59,6 +59,7 @@ class Vault:
                 subcomponent = subcomponent_map.get(itemcode)
 
                 saved_file_paths.append({
+                    'id': idx + 1,
                     'component': component,
                     'itemcode': itemcode,
                     'filepath': path,

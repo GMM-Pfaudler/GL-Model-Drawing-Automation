@@ -3,10 +3,12 @@ import os
 import re
 from services.vault_service import Vault
 from services.inventor_service import Inventor
+from repositories.mongo_db import Mongo
 class Generation:
     def __init__(self):
         self.vault = Vault()
         self.inventor = Inventor()
+        self.mongo = Mongo(db="testdb")
 
     def get_component_list(self, model_details):
         keys = list(model_details['details'].keys())
@@ -83,131 +85,6 @@ class Generation:
                     item_codes.append(item_code)
         print(item_codes)
         return item_codes
-
-    # def process_fittings(self, fittings):
-    #     """Convert fittings into structured list of dicts."""
-    #     sub_fittings = []
-    #     for fit in fittings:
-    #         sub_fittings.append({
-    #             'comp': fit.get('fittingNo', ''),
-    #             'partnumber': '',
-    #             'member': '',
-    #             'itemcode': fit.get('itemCode', ''),
-    #             'drawingNumber': fit.get('drawingNumber', ''),
-    #             'sub_components': []
-    #         })
-    #     return sub_fittings
-
-    # def process_nozzles(self, comp_data):
-    #     """Convert all nozzles (and fittings inside them) into proper structure."""
-    #     nozzles_list = []
-    #     for key, val in comp_data.items():
-    #         if key.startswith("nozzle_"):
-    #             try:
-    #                 nozzle_data = json.loads(val)
-    #                 fittings = nozzle_data.get('fittings', [])
-    #                 nozzle_data['fittings'] = self.process_fittings(fittings)
-                    
-    #                 nozzles_list.append({
-    #                     'comp': nozzle_data.get('nozzleNo', ''),
-    #                     'partnumber': '',
-    #                     'member': '',
-    #                     'itemcode': nozzle_data.get('itemCode', ''),
-    #                     'drawingNumber': nozzle_data.get('drawingNumber', ''),
-    #                     'sub_components': nozzle_data['fittings']
-    #                 })
-    #             except json.JSONDecodeError:
-    #                 continue
-    #     return nozzles_list
-
-    # def process_component(self, comp_name, comp_data):
-    #     """Process each component based on its type."""
-    #     model_info = comp_data.get('model_info', {})
-        
-    #     # Base structure
-    #     comp_dict = {
-    #         'comp': comp_name.lower(),
-    #         'partnumber': '',
-    #         'member': '',
-    #         'itemcode': model_info.get('itemCode', ''),
-    #         'drawingNumber': model_info.get('drawingNumber', ''),
-    #         'sub_components': []
-    #     }
-
-    #     # Custom logic per component
-    #     if comp_name.lower() == 'monoblock':
-    #         comp_dict['sub_components'] = self.process_nozzles(comp_data)
-        
-    #     elif comp_name.lower() == 'coc':
-    #         # Future logic for coc, if it ever has subcomponents
-    #         comp_dict['sub_components'] = []
-
-    #     return comp_dict
-
-    # def process_components(self, data):
-    #     """Main processor for all components."""
-    #     result = []
-    #     for comp_dict in data:
-    #         for comp_name, comp_data in comp_dict.items():
-    #             result.append(self.process_component(comp_name, comp_data))
-    #     return result    
-    
-
-    # def flatten_components(self, data):
-    #     flat_list = []
-
-    #     for comp_dict in data:
-    #         for comp_key, comp_val in comp_dict.items():
-    #             # Extract model info
-    #             model_info = comp_val.get('model_info', {})
-    #             itemcode = model_info.get('itemCode', '')
-    #             drawingnumber = model_info.get('drawingNumber', '')
-
-    #             # Add main component
-    #             flat_list.append({
-    #                 'comp': comp_key.lower(),
-    #                 'drawingnumber': drawingnumber,
-    #                 'member': '',
-    #                 'itemcode': f"7005{model_info.get('model', '').replace('CE_', 'CE0')}-000" if model_info.get('model') else itemcode,
-    #                 'sub_components': []
-    #             })
-
-    #             # Process all nozzles dynamically
-    #             for k, v in comp_val.items():
-    #                 if k.startswith('nozzle_'):
-    #                     try:
-    #                         nozzle_data = json.loads(v)
-    #                     except Exception:
-    #                         continue
-
-    #                     nozzle_no = nozzle_data.get('nozzleNo', '')
-    #                     size = nozzle_data.get('size', '')
-    #                     degree = nozzle_data.get('degree', '')
-    #                     fittings = nozzle_data.get('fittings', [])
-
-    #                     # Loop through fittings
-    #                     for fitting in fittings:
-    #                         fname_raw = fitting.get('name', '')
-    #                         # Convert spaces, special chars → underscore
-    #                         fname = re.sub(r'\s+', '_', fname_raw.strip().lower())
-
-    #                         fitemcode = fitting.get('itemCode', '')
-    #                         fdrawing = fitting.get('drawingNumber', '')
-
-    #                         # Skip if degree is '-' or empty
-    #                         if degree in ('', '-', None):
-    #                             comp_name = f"{nozzle_no}_{size}_{fname}"
-    #                         else:
-    #                             comp_name = f"{nozzle_no}_{size}_{degree}_{fname}"
-
-    #                         flat_list.append({
-    #                             'comp': comp_name.lower(),
-    #                             'drawingnumber': fdrawing,
-    #                             'member': '',
-    #                             'itemcode': fitemcode,
-    #                             'sub_components': []
-    #                         })
-    #     return flat_list
 
     def flatten_components(self, data):
         id = 0
@@ -463,6 +340,7 @@ class Generation:
         standard_model = {
             "reactor": "",
             "model": "",
+            "standard": "NON-GMP",
             "model_info": {
                 "glass": "",
                 "ndt": "",
@@ -511,7 +389,7 @@ class Generation:
                         try:
                             nozzle_dict = json.loads(v)
                             idx = len(nozzles) + 1
-                            nozzles[idx] = {
+                            nozzles[str(idx)] = {
                                 "nozzle_name": nozzle_dict.get("nozzleNo", ""),
                                 "size": nozzle_dict.get("size", ""),
                                 "drilling_standard": nozzle_dict.get("drillingStandard", ""),
@@ -539,7 +417,7 @@ class Generation:
                 # Add jacket nozzles
                 nozzles = {}
                 for i, n in enumerate(nozzle_list, start=1):
-                    nozzles[i] = {
+                    nozzles[str(i)] = {
                         "nozzle_name": n.get("nozzle", ""),
                         "size": n.get("size", ""),
                         "degree": n.get("degree", ""),
@@ -550,7 +428,6 @@ class Generation:
                 configurations["nozzles"] = nozzles
 
             elif component_name.lower() == "diaphragmring":
-                print(component_name.lower())
                 configurations = {
                     "ring_material": component_data.get("ringMaterial", ""),
                     "nozzle_size": component_data.get("nozzleSize", ""),
@@ -582,24 +459,344 @@ class Generation:
                     "drawing_number": component_data.get("model_info", "").get("drawingNumber", ""),
                     "item_code": component_data.get("model_info", "").get("itemCode", "")
                 }
+            
+            elif component_name.lower() == "bfcclamp":
+                configurations = {
+                    "material": component_data.get("bfCClampMaterial", ""),
+                    "size": component_data.get("bfCClampSize", ""),
+                    "quantity": component_data.get("bfCClampQty", ""),
+                    "drawing_number": component_data.get("model_info", {}).get("drawingNumber", ""),
+                    "item_code": component_data.get("model_info", {}).get("itemCode", "")
+                }
+
+            elif component_name.lower() == "sensor":
+                dial_thermo = component_data.get("dialThermo", {})
+                configurations = {
+                    "sensor_type": dial_thermo.get("sensorType", ""),
+                    "length": dial_thermo.get("dialThermoLength", ""),
+                    "drawing_number": dial_thermo.get("dialThermoDrawingNumber", ""),
+                    "item_code": dial_thermo.get("dialThermoItemCode", "")
+                }
+
+            elif component_name.lower() == "agitator":
+                single_flight = component_data.get("singleFlightData", {})
+                double_flight = component_data.get("doubleFlightData", {})
+                triple_flight = component_data.get("tripleFlightData", {})
+                special_flight = component_data.get("specialFlightData", {})
+
+                configurations = {
+                    "shaft_dia": component_data.get("shaftDia", ""),
+                    "sealing_type": component_data.get("sealingType", ""),
+                    "volume_marking": component_data.get("volumeMarking", ""),
+                    "hastalloy_sleeve": component_data.get("hastalloySleeve", ""),
+                    "agitator_height": component_data.get("agitatorHeight", ""),
+                    "flight": component_data.get("flight", ""),
+                    "single_flight": single_flight,
+                    "double_flight": double_flight,
+                    "triple_flight": triple_flight,
+                    "special_flight": special_flight,
+                    "drawing_number": component_data.get("model_info", {}).get("drawingNumber", ""),
+                    "item_code": component_data.get("model_info", {}).get("itemCode", "")
+                }
+
+            elif component_name.lower() == "shaftclosure":
+                configurations = {
+                    "shaft_dia": component_data.get("shaftclosureDia", ""),
+                    "type": component_data.get("shaftclosureType", ""),
+                    "make": component_data.get("shaftclosureMake", ""),
+                    "sealing": component_data.get("shaftclosureSealing", ""),
+                    "housing": component_data.get("shaftclosureHousing", ""),
+                    "inboard_face": component_data.get("shaftclosureInboardFace", ""),
+                    "outboard_face": component_data.get("shaftclosureOutboardFace", ""),
+                    "other": component_data.get("shaftclosureOther", ""),
+                    "drawing_number": component_data.get("model_info", {}).get("drawingNumber", ""),
+                    "item_code": component_data.get("model_info", {}).get("itemCode", "")
+                }
+
+            elif component_name.lower() == "gearbox":
+                configurations = {
+                    "make": component_data.get("gearboxMake", ""),
+                    "type": component_data.get("gearboxType", ""),
+                    "model": component_data.get("gearboxModel", ""),
+                    "ratio": component_data.get("gearboxRatio", ""),
+                    "frame": component_data.get("gearboxFrame", ""),
+                    "drawing_number": component_data.get("model_info", {}).get("drawingNumber", ""),
+                    "item_code": component_data.get("model_info", {}).get("itemCode", "")
+                }
+
+            elif component_name.lower() == "motor":
+                configurations = {
+                    "make": component_data.get("motorMake", ""),
+                    "type": component_data.get("motorType", ""),
+                    "mounting": component_data.get("motorMouting", ""),
+                    "hp": component_data.get("motorHP", ""),
+                    "standard": component_data.get("motorStandard", ""),
+                    "frame": component_data.get("motorFrame", ""),
+                    "temp_class": component_data.get("motorTempClass", ""),
+                    "gas_group": component_data.get("motorGasGroup", ""),
+                    "protection": component_data.get("motorProtection", ""),
+                    "drawing_number": component_data.get("model_info", {}).get("drawingNumber", ""),
+                    "item_code": component_data.get("model_info", {}).get("itemCode", "")
+                }
+
+            elif component_name.lower() == "driveassembly":
+                configurations = {
+                    "drive_base_ring": component_data.get("driveBaseRing", {}),
+                    "pad_plate": component_data.get("padPlat", {}),
+                    "lantern_support": component_data.get("lanternSupport", {}),
+                    "lantern_guard": component_data.get("lanternGuard", {}),
+                    "agitator_gear_coupling": component_data.get("agitatorGearCoupling", {}),
+                    "adapter_gearbox_model": component_data.get("adaptorGearBoxModel", {}),
+                    "bearing": component_data.get("bearing", {}),
+                    "sleeve": component_data.get("sleeve", {}),
+                    "oil_seal": component_data.get("oilSeal", {}),
+                    "circlip": component_data.get("circlip", {}),
+                    "lock_nut": component_data.get("lockNut", {}),
+                    "lock_washer": component_data.get("lockWasher", {}),
+                    "drawing_number": component_data.get("model_info", {}).get("drawingNumber", ""),
+                    "item_code": component_data.get("model_info", {}).get("itemCode", "")
+                }
+
+            elif component_name.lower() == "nameplatebracket":
+                configurations = {
+                    "material": component_data.get("npbMaterial", ""),
+                    "type": component_data.get("npbType", ""),
+                    "mounting": component_data.get("npbMounting", ""),
+                    "drawing_number": component_data.get("model_info", {}).get("drawingNumber", ""),
+                    "item_code": component_data.get("model_info", {}).get("itemCode", "")
+                }
+
+            elif component_name.lower() == "airventcouplingplug":
+                nozzles = {}
+                for i, n in enumerate(component_data.get("nozzles", []), start=1):
+                    nozzles[str(i)] = {
+                        "nozzle_name": n.get("nozzle", ""),
+                        "type": n.get("type", ""),
+                        "location": n.get("location", ""),
+                        "length": n.get("length", ""),
+                        "size": n.get("size", ""),
+                        "material": n.get("material", ""),
+                        "drawing_number": n.get("drawingNumber", ""),
+                        "item_code": n.get("itemCode", "")
+                    }
+
+                configurations = {
+                    "nozzles": nozzles,
+                    "drawing_number": component_data.get("model_info", {}).get("drawingNumber", ""),
+                    "item_code": component_data.get("model_info", {}).get("itemCode", "")
+                }
+
 
             else:
                 # fallback: include all simple key-values
                 configurations = {k: v for k, v in component_data.items() if not isinstance(v, (dict, list))}
 
             # Add component into main dict
-            standard_model["components"][component_index] = {
+            standard_model["components"][str(component_index)] = {
                 "component": component_name,
                 "configurations": configurations
             }
             component_index += 1
 
         return standard_model
+    
+    def extract_component_data(self, data: dict):
+        """
+        Extract standardized component and subcomponent data
+        from a standard model dictionary. 
+        """
 
+        results = []
+        id_counter = 1
+
+        def make_entry(comp, itemcode, drawing_number, subs=None):
+            nonlocal id_counter
+            entry = {
+                "id": id_counter,
+                "comp": comp.lower(),
+                "partnumber": drawing_number or "",
+                "member": "",
+                "itemcode": itemcode or "",
+                "sub_components": subs or []
+            }
+            id_counter += 1
+            return entry
+
+        components = data.get("components", {})
+
+        for key, comp_data in components.items():
+            comp_name = comp_data.get("component", "").lower()
+            config = comp_data.get("configurations", {})
+
+            # --- MONOBLOCK ---
+            if comp_name == "monoblock":
+                results.append(make_entry(
+                    "monoblock",
+                    config.get("item_code"),
+                    config.get("drawing_number")
+                ))
+
+            # --- JACKET (has nested parts) ---
+            elif comp_name == "jacket":
+                jacket = config.get("jacket", {})
+                support = config.get("support", {})
+                earthing = config.get("earthing", {})
+
+                results.append(make_entry(
+                    "jacket",
+                    jacket.get("itemCodeJacket"),
+                    jacket.get("drawingNumberJacket")
+                ))
+
+                if support:
+                    results.append(make_entry(
+                        support.get("component", "sidebracket"),
+                        support.get("itemCodeJacketSupport"),
+                        support.get("drawingNumberJacketSupport")
+                    ))
+
+                if earthing:
+                    results.append(make_entry(
+                        "earthing",
+                        earthing.get("itemCodeJacketEarthing"),
+                        earthing.get("drawingNumberJacketEarthing")
+                    ))
+
+            # --- DIAPHRAGMRING ---
+            elif comp_name == "diaphragmring":
+                results.append(make_entry(
+                    "diaphragmring",
+                    config.get("item_code"),
+                    config.get("drawing_number")
+                ))
+
+            # --- SPRING BALANCE ASSEMBLY ---
+            elif comp_name == "springbalanceassembly":
+                results.append(make_entry(
+                    "springbalanceassembly",
+                    config.get("item_code"),
+                    config.get("drawing_number")
+                ))
+
+            # --- MHC CLAMP / BF C CLAMP ---
+            elif comp_name in ["mhcclamp", "bfCClamp".lower()]:
+                results.append(make_entry(
+                    comp_name,
+                    config.get("item_code"),
+                    config.get("drawing_number")
+                ))
+
+            # --- SENSOR ---
+            elif comp_name == "sensor":
+                results.append(make_entry(
+                    "sensor",
+                    config.get("item_code"),
+                    config.get("drawing_number")
+                ))
+
+            # --- COC ---
+            elif comp_name == "coc":
+                results.append(make_entry(
+                    "coc",
+                    config.get("item_code"),
+                    config.get("drawing_number")
+                ))
+
+            # --- AGITATOR ---
+            elif comp_name == "agitator":
+                results.append(make_entry(
+                    "agitator",
+                    config.get("item_code"),
+                    config.get("drawing_number")
+                ))
+
+            # --- SHAFT CLOSURE ---
+            elif comp_name == "shaftclosure":
+                results.append(make_entry(
+                    "shaftclosure",
+                    config.get("item_code"),
+                    config.get("drawing_number")
+                ))
+
+            # --- GEARBOX ---
+            elif comp_name == "gearbox":
+                results.append(make_entry(
+                    "gearbox",
+                    "",
+                    ""
+                ))
+                # results.append(make_entry(
+                #     "gearbox",
+                #     config.get("item_code"),
+                #     config.get("drawing_number")
+                # ))
+
+            # --- MOTOR ---
+            elif comp_name == "motor":
+                results.append(make_entry(
+                    "motor",
+                    "",
+                    ""
+                ))
+                # results.append(make_entry(
+                #     "motor",
+                #     config.get("item_code"),
+                #     config.get("drawing_number")
+                # ))
+
+            # --- DRIVE ASSEMBLY (multi-sub) ---
+            elif comp_name == "driveassembly":
+                subconfigs = config
+                for sub_name, sub_conf in subconfigs.items():
+                    if isinstance(sub_conf, dict):
+                        # if sub_name == "drive_base_ring":
+                        results.append(make_entry(
+                            sub_name,
+                            "",
+                            ""
+                        ))
+                        # results.append(make_entry(
+                        #     sub_name,
+                        #     sub_conf.get("item_code") or sub_conf.get("itemCode") or sub_conf.get("itemCodeDriveBaseRing") or sub_conf.get("itemCodePadPlate") or sub_conf.get("itemCodeLanternSupport") or sub_conf.get("itemCodeLanternGuard") or sub_conf.get("itemCodeAgitatorGearCoupling") or sub_conf.get("itemCodeGearBoxModel") or sub_conf.get("itemCodeBearingNumber") or sub_conf.get("itemCodeSleeve") or sub_conf.get("itemCodeOilSeal") or sub_conf.get("itemCodeCirclip") or sub_conf.get("itemCodeLockNut") or sub_conf.get("itemCodeLockWasher"),
+                        #     sub_conf.get("drawing_number") or sub_conf.get("drawingNumber") or sub_conf.get("drawingNumberDriveBaseRing") or sub_conf.get("drawingNumberPadPlate") or sub_conf.get("drawingNumberLanternSupport") or sub_conf.get("drawingNumberLanternGuard") or sub_conf.get("drawingNumberAgitatorGearCoupling") or sub_conf.get("drawingNumberGearBoxModel") or sub_conf.get("drawingNumberBearingNumber") or sub_conf.get("drawingNumberSleeve") or sub_conf.get("drawingNumberOilSeal") or sub_conf.get("drawingNumberCirclip") or sub_conf.get("drawingNumberLockNut") or sub_conf.get("drawingNumberLockWasher")
+                        # ))
+
+            # --- NAME PLATE BRACKET ---
+            elif comp_name == "nameplatebracket":
+                results.append(make_entry(
+                    "nameplatebracket",
+                    config.get("item_code"),
+                    config.get("drawing_number")
+                ))
+
+            # --- AIR VENT COUPLING PLUG (nozzles) ---
+            elif comp_name == "airventcouplingplug":
+                nozzles = config.get("nozzles", {})
+                for nz_key, nz_data in nozzles.items():
+                    results.append(make_entry(
+                        f"airvent_{nz_data.get('type', '').lower()}_{nz_data.get('nozzle_name', '').lower()}",
+                        nz_data.get("item_code"),
+                        nz_data.get("drawing_number")
+                    ))
+
+            # --- DEFAULT / FALLBACK ---
+            else:
+                # try generic item_code / drawing_number if nothing matches
+                itemcode = config.get("item_code") or next(
+                    (v for k, v in config.items() if "itemcode" in k.lower()), "")
+                drawing_number = config.get("drawing_number") or next(
+                    (v for k, v in config.items() if "drawing" in k.lower()), "")
+                results.append(make_entry(comp_name, itemcode, drawing_number))
+           
+        # results = [c for c in results if c.get("itemcode")]
+
+        return results
 
     def generate_model(self, model_details):
         components = self.get_component_list(model_details=model_details)
         standard_model = self.build_standard_model(data = components)
+        # result_id = self.mongo.insert(collection_name="standard_models", document=standard_model)
+        result = self.extract_component_data(data=standard_model)
         # component_item_codes = self.flatten_components(data=components)
         # print(component_item_codes)
         # # result = self.process_components(data=components)
@@ -710,7 +907,8 @@ class Generation:
                                 {'id':71, 'comp': 'n10_150_300_washer', 'partnumber': '', 'member': '', 'itemcode':'13WS0155', 'sub_components': []},
                                 {'id':72, 'comp': 'n10_150_300_nut', 'partnumber': '', 'member': '', 'itemcode':'13CSNT-0007', 'sub_components': []},
                                 ]
-        downloaded_components_files = self.vault.find_files_by_item_codes(item_codes=component_item_codes)
+        # downloaded_components_files = self.vault.find_files_by_item_codes(item_codes=component_item_codes)
+        downloaded_components_files = self.vault.find_files_by_item_codes(item_codes=result)
         is_generated = self.inventor.generate(components=downloaded_components_files, model_details=model_details)
         return is_generated
     def open_component(self, compo_details):
