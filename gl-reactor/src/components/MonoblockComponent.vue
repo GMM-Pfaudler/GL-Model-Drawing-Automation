@@ -1576,7 +1576,7 @@ export default {
     const spilageCollectionTray = ref(null)
     const spilageCollectionTrayOptions = ref(["-", "Yes", "No"])
     const liftingMOC = ref(null)
-    const liftingMOCOptions = ref(["-", "MS", "SS304", "SS316"])
+    const liftingMOCOptions = ref(["-", "MS", "SS304", "SS316", "SA 516M Gr 415 (SA 516 Gr 60)"])
     const modelType = ref("Standard")
     const modelTypeOptions = ref(["-", "Standard", "Non-Standard"])
     const nozzles = ref([])
@@ -2338,13 +2338,37 @@ export default {
       }
     }
 
+    const generateNextId = (list, name) => {
+      const filtered = list.filter(obj => obj.name === name);
+
+      if (filtered.length === 0) {
+        return 1; // No object exists → start with ID 1
+      }
+
+      const maxId = Math.max(...filtered.map(obj => obj.id || 0));
+      return maxId + 1;
+    };
+
+
     const addObjectToList = (fitting) => {
+
+      const fittingsList = nozzles.value[fittingIndex.value].fittings
+      // Generate next ID for this fitting name
+      const nextId = generateNextId(fittingsList, fitting);
+
       // Build the fitting data object
       const fittingData = {
+        id: nextId,
         name: fitting || null,
         itemCode: fittingItemCode.value || null,
         drawingNumber: fittingDrawingNumber.value || null,
-      }
+      };
+      // Build the fitting data object
+      // const fittingData = {
+      //   name: fitting || null,
+      //   itemCode: fittingItemCode.value || null,
+      //   drawingNumber: fittingDrawingNumber.value || null,
+      // }
 
       // Assign size or specific fields depending on the fitting type
       switch (fitting) {
@@ -2419,7 +2443,7 @@ export default {
       }
 
       // Push into the fittings array of the selected nozzle
-      nozzles.value[fittingIndex.value].fittings.push(fittingData)
+      fittingsList.push(fittingData)
 
       // Optional: console log to verify
       // console.log('Added fitting:', JSON.stringify(fittingData, null, 2))

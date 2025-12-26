@@ -4,6 +4,7 @@
      <!-- Jacket -->
      <!-- First Row -->
     <div class="q-mb-md">
+        <div class="text-h6 q-mb-md ">Jacket</div>
         <div class="row q-gutter-md q-wrap">
             <q-input
             outlined
@@ -124,7 +125,41 @@
         </q-chip>
       </div>
     </div>
+    <q-separator spaced />
+    <div class="text-h6 q-mb-md ">Diaphragm Ring</div>
+    <div class="q-mb-md">
+        <div class="row q-gutter-md q-wrap">
+            <q-select
+            outlined
+            v-model="ringMaterial"
+            :options="ringMaterialOptions"
+            label="Material"
+            dense
+            class="col-12 col-md-2"
+            />
 
+            <q-input
+            outlined
+            v-model="nozzleSize"
+            label="Bottom Nozzle Size"
+            dense
+            class="col-12 col-md-2"
+            />
+
+            <q-space/>
+            <q-btn outline rounded color="primary" icon="search" label="Search" @click="searchRingData"/>
+        </div>
+    </div>
+    <div class="q-mb-md">
+      <div class="row q-gutter-md q-wrap">
+        <q-chip  v-if="drawingNumberJacketEarthing" outline square color="blue-5" text-color="white">
+          {{ "Drawing Number: " + drawingNumberJacketEarthing }}
+        </q-chip>
+        <q-chip  v-if="itemCodeJacketEarthing" outline square color="blue-5" text-color="white">
+          {{ "Item Code: " + itemCodeJacketEarthing }}
+        </q-chip>
+      </div>
+    </div>
     <q-separator spaced />
     <div class="text-h6 q-mb-md ">Earthing</div>
     <div class="q-mb-md">

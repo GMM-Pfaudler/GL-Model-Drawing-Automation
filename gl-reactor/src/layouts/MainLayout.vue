@@ -306,7 +306,7 @@
                       <div>
                         <div class="row">
                           <q-chip size="xl" outline square color="blue-5" text-color="white" style="padding-right: 50px;">
-                            {{ "Jacket" }}
+                            {{ "Jacket Fittings" }}
                           </q-chip>
                           <!-- <q-space/>
                           <q-chip v-if="jacketDrawingNumber !== null" outline square color="blue-5" text-color="white">
