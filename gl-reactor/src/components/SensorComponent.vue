@@ -54,7 +54,7 @@
                     <q-input
                     outlined
                     v-model="rtdLengthOne"
-                    type="number"
+                    type="text"
                     label="Length"
                     :rules="[val => !!val || 'This field is required']"
                     dense
@@ -129,7 +129,7 @@
                     <q-input
                     outlined
                     v-model="rtdLengthTwo"
-                    type="number"
+                    type="text"
                     label="Length"
                     :rules="[val => !!val || 'This field is required']"
                     dense
@@ -178,7 +178,7 @@
                 <q-input
                 outlined
                 v-model="dialThermoLength"
-                type="number"
+                type="text"
                 label="Length"
                 :rules="[val => !!val || 'This field is required']"
                 dense

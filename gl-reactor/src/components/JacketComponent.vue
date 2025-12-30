@@ -9,7 +9,7 @@
             <q-input
             outlined
             v-model="shellThickness"
-            type="number"
+            type="text"
             label="Shell Thickness"
             dense
             class="col-12 col-md-2"
@@ -17,7 +17,7 @@
             <q-input
             outlined
             v-model="dishThickness"
-            type="number"
+            type="text"
             label="Dish Thickness"
             dense
             class="col-12 col-md-2"
@@ -278,7 +278,7 @@
           outlined
           v-model="cToc"
           label="C To C"
-          type="number"
+          type="text"
           dense
           class="col-12 col-md-2"
         />
@@ -298,7 +298,7 @@
           outlined
           v-model="supportHeight"
           label="Height from BTM Nozzle Face"
-          type="number"
+          type="text"
           dense
           class="col-12 col-md-2"
         />
@@ -308,7 +308,7 @@
           outlined
           v-model="supportOD"
           label="Outside Diameter"
-          type="number"
+          type="text"
           dense
           class="col-12 col-md-2"
         />
@@ -380,10 +380,10 @@
             <q-input v-model="row.length" outlined dense />
           </div>
           <div class="col">
-            <q-input v-model.number="row.size" type="number" outlined dense />
+            <q-input v-model.number="row.size" type="text" outlined dense />
           </div>
           <div class="col">
-            <q-input v-model.number="row.degree" type="number" outlined dense />
+            <q-input v-model.number="row.degree" type="text" outlined dense />
           </div>
           <div class="col">
             <q-input v-model="row.location" outlined dense />

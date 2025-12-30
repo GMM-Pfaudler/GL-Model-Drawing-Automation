@@ -191,7 +191,7 @@
             v-model="lanternSupportFlangeNominalSize"
             label="Flange Nominal Size (DBR Size)"
             :rules="[val => !!val || 'Please select a value']"
-            type="number"
+            type="text"
             dense
             class="col-12 col-md-2"
             clearable
@@ -631,7 +631,7 @@
             label="Size"
             :rules="[val => !!val || 'Please select a value']"
             dense
-            type="number"
+            type="text"
             class="col-12 col-md-2"
             clearable
             />
@@ -730,7 +730,7 @@
             label="Size"
             :rules="[val => !!val || 'Please select a value']"
             dense
-            type="number"
+            type="text"
             class="col-12 col-md-2"
             clearable
             />

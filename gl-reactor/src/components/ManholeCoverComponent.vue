@@ -65,10 +65,10 @@
           <q-input v-model="row.nozzle" outlined dense />
         </div>
         <div class="col">
-          <q-input v-model.number="row.size" type="number" outlined dense />
+          <q-input v-model.number="row.size" type="text" outlined dense />
         </div>
         <div class="col">
-          <q-input v-model.number="row.degree" type="number" outlined dense />
+          <q-input v-model.number="row.degree" type="text" outlined dense />
         </div>
       </div>
       <div class="row q-col-gutter-sm q-mt-md">

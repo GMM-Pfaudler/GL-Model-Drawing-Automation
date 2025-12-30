@@ -48,7 +48,7 @@
             outlined
             v-model="agitatorHeight"
             dense
-            type="number"
+            type="text"
             label="Length / Height"
             style="width: 300px; padding-right: 50px;"
             clearable
@@ -58,7 +58,7 @@
             outlined
             v-model="shaftDiaWithSleeve"
             dense
-            type="number"
+            type="text"
             label="Shaft Dia with Sleeve"
             style="width: 300px;"
             clearable
@@ -93,7 +93,7 @@
                 outlined
                 v-model="singleFlightDia"
                 dense
-                type="number"
+                type="text"
                 label="Sweep Diameter"
                 style="width: 300px;"
                 clearable
@@ -115,7 +115,7 @@
                 outlined
                 v-model="doubleFlightDia"
                 dense
-                type="number"
+                type="text"
                 label="Sweep Diameter"
                 style="width: 350px; padding-right: 50px;"
                 clearable
@@ -125,7 +125,7 @@
                 outlined
                 v-model="doubleFlightDistance"
                 dense
-                type="number"
+                type="text"
                 label="Distance"
                 style="width: 300px;"
                 clearable
@@ -146,7 +146,7 @@
                 outlined
                 v-model="tripleFlightDia"
                 dense
-                type="number"
+                type="text"
                 label="Sweep Diameter"
                 style="width: 350px; padding-right: 50px;"
                 clearable
@@ -156,7 +156,7 @@
                 outlined
                 v-model="tripleFlightDistance"
                 dense
-                type="number"
+                type="text"
                 label="Distance"
                 style="width: 300px;"
                 clearable
@@ -177,7 +177,7 @@
                 outlined
                 v-model="specialFlightDia"
                 dense
-                type="number"
+                type="text"
                 label="Sweep Diameter"
                 style="width: 350px; padding-right: 50px;"
                 clearable
@@ -187,7 +187,7 @@
                 outlined
                 v-model="specialFlightDistance"
                 dense
-                type="number"
+                type="text"
                 label="Distance"
                 style="width: 300px;"
                 clearable

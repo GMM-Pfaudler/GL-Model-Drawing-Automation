@@ -50,7 +50,7 @@
         <q-input
           outlined
           v-model="mountingNozzleOne"
-          type="number"
+          type="text"
           label="Mounting Nozzle"
           :rules="[val => !!val || 'This field is required']"
           dense
@@ -61,7 +61,7 @@
         <q-input
           outlined
           v-model="immersionLengthOne"
-          type="number"
+          type="text"
           label="Immersion Length"
           :rules="[val => !!val || 'This field is required']"
           dense
@@ -150,7 +150,7 @@
         <q-input
           outlined
           v-model="mountingNozzleTwo"
-          type="number"
+          type="text"
           label="Mounting Nozzle"
           :rules="[val => !!val || 'This field is required']"
           dense
@@ -161,7 +161,7 @@
         <q-input
           outlined
           v-model="immersionLengthTwo"
-          type="number"
+          type="text"
           label="Immersion Length"
           :rules="[val => !!val || 'This field is required']"
           dense

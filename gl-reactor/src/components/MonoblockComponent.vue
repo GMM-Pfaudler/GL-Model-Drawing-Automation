@@ -7,7 +7,7 @@
         <q-input
           outlined
           v-model="id"
-          type="number"
+          type="text"
           label="I/D"
           dense
           class="col-12 col-md-2"
@@ -15,7 +15,7 @@
         <q-input
           outlined
           v-model="osTos"
-          type="number"
+          type="text"
           label="O/S To O/S"
           dense
           class="col-12 col-md-2"
@@ -55,7 +55,7 @@
         <q-input
           outlined
           v-model="topDishedEndThickness"
-          type="number"
+          type="text"
           label="Top Dished End Thickness"
           dense
           class="col-12 col-md-2"
@@ -63,7 +63,7 @@
         <q-input
           outlined
           v-model="innerShellThickness"
-          type="number"
+          type="text"
           label="Inner Shell Thickness"
           dense
           class="col-12 col-md-2"
@@ -71,7 +71,7 @@
         <q-input
           outlined
           v-model="bottomDishedEndThickness"
-          type="number"
+          type="text"
           label="Bottom Dished End Thickness"
           dense
           class="col-12 col-md-2"
@@ -301,7 +301,7 @@
               <q-input
                 outlined
                 v-model="splitFlangeSize"
-                type="number"
+                type="text"
                 label="Size"
                 dense
                 class="col-12 col-md-3"
@@ -341,7 +341,7 @@
               <q-input
                 outlined
                 v-model="gasketSize"
-                type="number"
+                type="text"
                 label="Size"
                 dense
                 class="col-12 col-md-3"
@@ -372,7 +372,7 @@
               <q-input
                 outlined
                 v-model="blindCoverSize"
-                type="number"
+                type="text"
                 label="Size"
                 dense
                 class="col-12 col-md-3"
@@ -411,7 +411,7 @@
               <q-input
                 outlined
                 v-model="reducingFlangeSize"
-                type="number"
+                type="text"
                 label="Size"
                 dense
                 class="col-12 col-md-3"
@@ -458,7 +458,7 @@
               <q-input
                 outlined
                 v-model="dipPipeSize"
-                type="number"
+                type="text"
                 label="Size"
                 dense
                 class="col-12 col-md-3"
@@ -504,7 +504,7 @@
               <q-input
                 outlined
                 v-model="spargerSize"
-                type="number"
+                type="text"
                 label="Size"
                 dense
                 class="col-12 col-md-3"
@@ -550,7 +550,7 @@
               <q-input
                 outlined
                 v-model="sprayBallPipeSize"
-                type="number"
+                type="text"
                 label="Size"
                 dense
                 class="col-12 col-md-3"
@@ -612,7 +612,7 @@
               <q-input
                 outlined
                 v-model="sprayBallSize"
-                type="number"
+                type="text"
                 label="Size"
                 dense
                 class="col-12 col-md-3"
@@ -635,7 +635,7 @@
               <q-input
                 outlined
                 v-model="teeSize"
-                type="number"
+                type="text"
                 label="Size"
                 dense
                 class="col-12 col-md-3"
@@ -681,7 +681,7 @@
               <q-input
                 outlined
                 v-model="protectionRingSize"
-                type="number"
+                type="text"
                 label="Size"
                 dense
                 class="col-12 col-md-3"
@@ -720,7 +720,7 @@
               <q-input
                 outlined
                 v-model="manholeCoverSize"
-                type="number"
+                type="text"
                 label="Size"
                 dense
                 class="col-12 col-md-3"
@@ -767,7 +767,7 @@
               <q-input
                 outlined
                 v-model="toughenedGlassSize"
-                type="number"
+                type="text"
                 label="Size"
                 dense
                 class="col-12 col-md-3"
@@ -798,7 +798,7 @@
               <q-input
                 outlined
                 v-model="glassFlangeSize"
-                type="number"
+                type="text"
                 label="Size"
                 dense
                 class="col-12 col-md-3"
@@ -829,7 +829,7 @@
               <q-input
                 outlined
                 v-model="extensionPieceSize"
-                type="number"
+                type="text"
                 label="Size"
                 dense
                 class="col-12 col-md-3"
@@ -883,7 +883,7 @@
               <q-input
                 outlined
                 v-model="baffleMountingNozzle"
-                type="number"
+                type="text"
                 label="Mounting Nozzle"
                 dense
                 class="col-12 col-md-3"
@@ -891,7 +891,7 @@
               <q-input
                 outlined
                 v-model="baffleImmersionLength"
-                type="number"
+                type="text"
                 label="Immersion Length"
                 dense
                 class="col-12 col-md-3"
@@ -930,7 +930,7 @@
               <q-input
                 outlined
                 v-model="thermowellMountingNozzle"
-                type="number"
+                type="text"
                 label="Mounting Nozzle"
                 dense
                 class="col-12 col-md-3"
@@ -938,7 +938,7 @@
               <q-input
                 outlined
                 v-model="thermowellImmersionLength"
-                type="number"
+                type="text"
                 label="Immersion Length"
                 dense
                 class="col-12 col-md-3"
@@ -1011,7 +1011,7 @@
               <q-input
                 outlined
                 v-model="bovProximitySwitch"
-                type="number"
+                type="text"
                 label="Proxomity/Limit Switch"
                 :disable="bovActuatorType === '-'"
                 dense
@@ -1020,7 +1020,7 @@
               <q-input
                 outlined
                 v-model="bovSOV"
-                type="number"
+                type="text"
                 label="SOV Type/Make"
                 :disable="bovActuatorType === '-'"
                 dense
@@ -1037,7 +1037,7 @@
               <q-input
                 outlined
                 v-model="bovRTD"
-                type="number"
+                type="text"
                 label="RTD Type/Make"
                 dense
                 class="col-12 col-md-3"
@@ -1149,7 +1149,7 @@
         />
         <q-input
           v-model.number="boltStudLength"
-          type="number"
+          type="text"
           label="Length (mm)"
           suffix="mm"
           dense
