@@ -45,10 +45,10 @@
             <q-input v-model.number="row.location" label="Location" outlined dense clearable/>
           </div>
           <div class="col">
-            <q-input v-model.number="row.length" type="number" label="Length" outlined dense clearable/>
+            <q-input v-model.number="row.length" type="text" label="Length" outlined dense clearable/>
           </div>
           <div class="col">
-            <q-input v-model="row.size" type="number" label="Size" outlined dense clearable/>
+            <q-input v-model="row.size" type="text" label="Size" outlined dense clearable/>
           </div>
           <div class="col">
               <q-select

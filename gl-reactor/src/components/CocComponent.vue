@@ -7,7 +7,7 @@
             outlined
             v-model="cocSize"
             label="Size"
-            type="number"
+            type="text"
             dense
             class="col-12 col-md-2"
             />

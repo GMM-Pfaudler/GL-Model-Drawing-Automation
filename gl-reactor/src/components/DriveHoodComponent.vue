@@ -70,7 +70,7 @@
             outlined
             v-model="hoodOutsideDia"
             label="Hood Outside Dia"
-            type="number"
+            type="text"
             dense
             class="col-12 col-md-2"
             />
@@ -79,7 +79,7 @@
             outlined
             v-model="hoodHeight"
             label="Hood Height"
-            type="number"
+            type="text"
             dense
             class="col-12 col-md-2"
             />
@@ -88,7 +88,7 @@
             outlined
             v-model="mountingPCD"
             label="Mounting PCD"
-            type="number"
+            type="text"
             dense
             class="col-12 col-md-2"
             />
