@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import stat
 import requests
 
 class Vault:
@@ -50,6 +51,7 @@ class Vault:
                 if not os.path.exists(path):
                     os.makedirs(os.path.dirname(path), exist_ok=True)
                 content = base64.b64decode(base64_content)
+                os.chmod(path, stat.S_IWRITE)
                 with open(path, "wb") as f:
                     os.chmod(path, 0o666)
                     f.write(content)

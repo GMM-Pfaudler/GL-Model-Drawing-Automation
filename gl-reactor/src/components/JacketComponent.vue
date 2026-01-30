@@ -125,8 +125,8 @@
         </q-chip>
       </div>
     </div>
-    <q-separator spaced />
-    <div class="text-h6 q-mb-md ">Diaphragm Ring</div>
+    <!-- <q-separator spaced /> -->
+    <!-- <div class="text-h6 q-mb-md ">Diaphragm Ring</div>
     <div class="q-mb-md">
         <div class="row q-gutter-md q-wrap">
             <q-select
@@ -159,7 +159,7 @@
           {{ "Item Code: " + itemCodeJacketEarthing }}
         </q-chip>
       </div>
-    </div>
+    </div> -->
     <q-separator spaced />
     <div class="text-h6 q-mb-md ">Earthing</div>
     <div class="q-mb-md">

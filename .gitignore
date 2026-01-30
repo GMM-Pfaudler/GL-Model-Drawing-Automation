@@ -26,3 +26,10 @@ compo_list.json
 .continue/agents/new-config.yaml
 gl-reactor-rest/reactor_preparation/monoblock_data.py
 gl-reactor/src/components/StepperLayout.vue
+CLAUDE.md
+.claude
+.claude/settings.local.json
+.claude/skills/inventor_api_skill/reference/quick_reference.md
+.claude/skills/inventor_api_skill/SKILL.md
+
+GEMINI.md
