@@ -113,3 +113,22 @@ Vault connection uses hardcoded credentials to server `172.30.0.14`.
 This application requires Windows due to:
 - Autodesk Inventor COM automation (`win32com`, `pywinauto`)
 - .NET Vault API with Autodesk SDK DLLs
+
+## Recent Optimizations
+
+### inventor_service.py (January 2026)
+The Inventor COM automation service was optimized with:
+- **Constants extraction**: Constraint codes, nozzle angles, plane names
+- **Helper methods**: `_get_geometry_proxies`, `_add_mate_constraint`, `_add_flush_constraint`, `_create_angled_plane`, `_create_circular_pattern`
+- **COM lifecycle management**: Context manager support (`with Inventor() as inv:`)
+- **Improved error handling**: Proper logging instead of print/bare except
+- **Degree-based geometry lookup**: New methods for dynamic plane/axis identification:
+  - `get_work_plane_by_degree(work_planes, target_degree, tolerance)`: Finds a WorkPlane by calculating its normal vector's angle in the XZ plane (around Y-axis) using `WorkPlane.Plane.Normal`
+  - `get_work_axis_by_degree(work_axes, target_degree, tolerance)`: Finds a WorkAxis by calculating its direction vector's angle in the XZ plane using `WorkAxis.Line.Direction`
+
+See `gl-reactor-rest/INVENTOR_SERVICE_OPTIMIZATION.md` for full details.
+
+### ofn_db.py Security Fix
+SQL injection vulnerabilities were fixed by parameterizing all queries and adding table name whitelist validation.
+
+See `gl-reactor-rest/BACKEND_ANALYSIS.md` for security analysis.

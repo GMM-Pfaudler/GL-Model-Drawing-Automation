@@ -677,7 +677,9 @@ class Generation:
                 for _, nozzle in nozzles.items():
                     nozzle_name = nozzle.get("nozzle_name", "").lower()
                     size = str(nozzle.get("size", "")).lower()
-
+                    degree = str(nozzle.get("degree", "")).lower()
+                    if degree == '-' or degree == None or degree == '':
+                        degree = 'D'
                     fittings = nozzle.get("fittings", [])
                     for fit in fittings:
                         member = fit.get("name", "").lower().replace(" ", "_")
@@ -687,9 +689,9 @@ class Generation:
 
                         if id != None:
                             # FITTING comp → n1_500_gasket
-                            comp_id = f"{nozzle_name}_{size}_{member}_{id}"
+                            comp_id = f"{nozzle_name}_{size}_{degree}_{member}_{id}"
                         else:
-                            comp_id = f"{nozzle_name}_{size}_{member}"
+                            comp_id = f"{nozzle_name}_{size}_{degree}_{member}"
 
                         # Add fitting entry
                         results.append(make_entry(
@@ -708,7 +710,7 @@ class Generation:
                         fast_item = fast.get("itemCode")
 
                         # FASTENER comp → n1_500_bolt (NO member here)
-                        fast_comp_id = f"{nozzle_name}_{size}_{fast_name}"
+                        fast_comp_id = f"{nozzle_name}_{size}_{degree}_{fast_name}"
 
                         results.append(make_entry(
                             fast_comp_id,
