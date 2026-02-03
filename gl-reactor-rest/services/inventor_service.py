@@ -5,9 +5,35 @@ import math
 import time
 import os
 import logging
+from datetime import datetime
 
-# Configure logging
+# Configure logging with date-wise file logging
+LOG_DIR = r"D:\GL\logs"
+os.makedirs(LOG_DIR, exist_ok=True)
+
+# Create logger
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+# Prevent duplicate handlers if module is reloaded
+if not logger.handlers:
+    # Console handler
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_format = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+    console_handler.setFormatter(console_format)
+
+    # File handler with date-based filename
+    log_filename = os.path.join(LOG_DIR, f"generation_{datetime.now().strftime('%Y-%m-%d')}.log")
+    file_handler = logging.FileHandler(log_filename, encoding='utf-8')
+    file_handler.setLevel(logging.DEBUG)
+    file_format = logging.Formatter('%(asctime)s [%(levelname)s] [%(funcName)s:%(lineno)d] %(message)s')
+    file_handler.setFormatter(file_format)
+
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
+
+    logger.info(f"Logging initialized. Log file: {log_filename}")
 
 # =============================================================================
 # CONSTANTS
@@ -48,34 +74,124 @@ NOZZLE_DISTANCE_FROM_PLANE = 2350  # mm
 NOZZLE_SKETCH_WIDTH = 5000  # mm
 
 # Component order for assembly (used in component_priority)
+# Note: Uses prefix matching - component names like 'n2_150_60_split_flange' match 'n2_150_60'
 COMPONENT_ORDER = [
     "monoblock", "jacket", "diaphragmring", "sidebracket", "earthing",
     "jacketnozzle_n16_shell", "jacketnozzle_n17_btm", "airvent_coupling_n11",
-    "n1_500_gasket_1", "n1_500_manhole_protection_ring_1", "n1_500_manhole_protection_ring",
-    "n1_500_gasket_2", "n1_500_manhole_cover_1", "n1_500_manhole_cover",
-    "mhcclamp", "springbalanceassembly", "n1_500_gasket_3", "n1_500_toughened_glass_1",
-    "n1_500_sight/light_glass_flange_1", "n1_500_washer", "n1_500_bolt/stud",
-    "coc_gasket", "coc", "bfcclamp", "m_200_gasket_1", "m_200_gasket",
+    "n1_500_0_gasket_1", "n1_500_0_manhole_protection_ring_1",
+    "n1_500_0_gasket_2", "n1_500_0_manhole_cover_1",
+    "mhcclamp", "springbalanceassembly", "n1_500_0_gasket_3", "n1_500_0_toughenedglass_1",
+    "n1_500_0_sight/light_glass_flange_1", "n1_500_0_washer_1", "n1_500_0_bolt/stud_1",
+    "coc_gasket", "coc", "bfcclamp", "m_200_d_gasket_1", "m_200_d_gasket",
     "driveassembly", "shaftclosure", "mechanical_seal_washer", "mechanical_seal_fastener",
-    "agitator", "n2_150_split_flange_1", "n2_150_split_flange", "n2_150_gasket_1",
-    "n2_150_gasket", "n2_150_blind_cover_1", "n2_150_blind_cover",
-    "n2_150_bolt/stud", "n2_150_washer", "n2_150_nut",
-    "n3_150_split_flange_1", "n3_150_split_flange", "n3_150_gasket_1", "n3_150_gasket",
-    "n3_150_blind_cover_1", "n3_150_blind_cover", "n3_150_bolt/stud", "n3_150_washer", "n3_150_nut",
-    "n5_250_split_flange_1", "n5_250_split_flange", "n5_150_split_flange_1", "n5_150_split_flange",
-    "n5_250_gasket_1", "n5_250_gasket", "n5_150_gasket_1", "n5_150_gasket",
-    "n5_250_baffle_1", "n5_250_baffle", "n5_150_baffle_1", "n5_150_baffle",
-    "n5_250_bolt/stud", "n5_150_bolt/stud", "n5_250_washer", "n5_150_washer", "n5_250_nut", "n5_150_nut",
-    "n6_150_split_flange_1", "n6_150_split_flange", "n6_150_gasket_1", "n6_150_gasket",
-    "n6_150_toughened_glass_1", "n6_150_toughened_glass", "n6_150_sight/light_glass_flange_1",
-    "n6_150_sight/light_glass_flange", "n6_150_bolt/stud", "n6_150_washer", "n6_150_nut",
-    "n7_250_split_flange_1", "n7_250_split_flange", "n7_250_gasket_1", "n7_250_gasket",
-    "n7_250_blind_cover_1", "n7_250_blind_cover", "n7_250_bolt/stud", "n7_250_washer", "n7_250_nut",
-    "n9_150_split_flange_1", "n9_150_split_flange", "n9_150_gasket_1", "n9_150_gasket",
-    "n9_150_blind_cover_1", "n9_150_blind_cover", "n9_150_bolt/stud", "n9_150_washer", "n9_150_nut",
-    "n10_150_split_flange_1", "n10_150_split_flange", "n10_150_gasket_1", "n10_150_gasket",
-    "n10_150_blind_cover_1", "n10_150_blind_cover", "n10_150_bolt/stud", "n10_150_washer", "n10_150_nut"
+    "agitator", "n2_150_60_split_flange_1", "n2_150_60_gasket_1",
+    "n2_150_60_blind_cover_1",
+    "n2_150_60_bolt/stud", "n2_150_60_washer", "n2_150_60_nut",
+    "n3_150_95_split_flange_1", "n3_150_95_gasket_1",
+    "n3_150_95_blind_cover_1", "n3_150_95_bolt/stud", "n3_150_95_washer", "n3_150_95_nut",
+    "n5_250_135_split_flange_1", "n5_250_135_gasket_1",
+    "n5_250_135_baffle_1",
+    "n5_250_135_bolt/stud", "n5_250_135_washer", "n5_250_135_nut",
+    "n6_150_180_split_flange_1", "n6_150_180_gasket_1",
+    "n6_150_180_toughened_glass_1", "n6_150_180_sight/light_glass_flange_1",
+    "n6_150_180_bolt/stud", "n6_150_180_washer", "n6_150_180_nut",
+    "n7_250_225_split_flange_1", "n7_250_225_gasket_1",
+    "n7_250_225_blind_cover_1", "n7_250_225_bolt/stud", "n7_250_225_washer", "n7_250_225_nut",
+    "n9_150_265_split_flange_1", "n9_150_265_gasket_1",
+    "n9_150_265_blind_cover_1", "n9_150_265_bolt/stud", "n9_150_265_washer", "n9_150_265_nut",
+    "n10_150_300_split_flange_1", "n10_150_300_gasket_1",
+    "n10_150_300_blind_cover_1", "n10_150_300_bolt/stud", "n10_150_300_washer", "n10_150_300_nut"
 ]
+
+# Nozzle family configurations (data-driven)
+NOZZLE_CONFIG = {
+    "n1": {"default_size": "500", "default_degree": "0", "fastener_count": 8, "is_manhole": True},
+    "n2": {"default_size": "150", "default_degree": "60", "fastener_count": 8},
+    "n3": {"default_size": "150", "default_degree": "95", "fastener_count": 8},
+    "n5": {"default_size": "250", "default_degree": "135", "fastener_count": 12, "sizes": ["150", "250"]},
+    "n6": {"default_size": "150", "default_degree": "180", "fastener_count": 8, "has_glass": True},
+    "n7": {"default_size": "250", "default_degree": "225", "fastener_count": 12},
+    "n9": {"default_size": "150", "default_degree": "265", "fastener_count": 8},
+    "n10": {"default_size": "150", "default_degree": "300", "fastener_count": 8},
+    "m": {"default_size": "200", "default_degree": "0", "fastener_count": 0, "is_center": True},
+}
+
+# Fitting type configurations
+FITTING_CONFIG = {
+    "split_flange": {
+        "proxies": ["Y Axis", "XY PLANE"],
+        "constraints": ["mate", "flush", "flush"],
+        "stores_state": True,
+    },
+    "gasket": {
+        "proxies": ["Y Axis", "XY PLANE", "XZ PLANE"],
+        "offset": 2.2,
+    },
+    "blind_cover": {
+        "proxies": ["Y Axis", "XY PLANE", "XZ PLANE"],
+    },
+    "baffle": {
+        "proxies": ["Y Axis", "XY PLANE", "XZ PLANE"],
+    },
+    "toughened_glass": {
+        "proxies": ["Y Axis", "XY PLANE", "XZ PLANE"],
+    },
+    "sight/light_glass_flange": {
+        "proxies": ["Y Axis", "XY PLANE", "XZ PLANE", "ASSEMBLY PLANE"],
+    },
+    "bolt/stud": {
+        "is_fastener": True,
+        "creates_pattern": False,
+    },
+    "washer": {
+        "is_fastener": True,
+        "creates_pattern": False,
+    },
+    "nut": {
+        "is_fastener": True,
+        "creates_pattern": True,  # Last fastener triggers circular pattern
+    },
+}
+
+# Component handler registry - maps patterns to handler methods
+COMPONENT_HANDLERS = {
+    "core": {
+        "patterns": ["monoblock", "jacket", "diaphragmring", "sidebracket", "earthing"],
+        "handler": "_handle_core_component",
+    },
+    "jacket_nozzle": {
+        "patterns": ["jacketnozzle_n16_shell", "jacketnozzle_n17_btm"],
+        "handler": "_handle_jacket_nozzle",
+    },
+    "airvent": {
+        "patterns": ["airvent_coupling"],
+        "handler": "_handle_airvent_coupling",
+    },
+    "manhole": {
+        "patterns": ["n1_500_0_gasket", "n1_500_0_manhole", "n1_500_0_toughened", "n1_500_0_sight", "n1_500_0_washer", "n1_500_0_bolt"],
+        "handler": "_handle_manhole_component",
+    },
+    "manhole_accessory": {
+        "patterns": ["mhcclamp", "springbalanceassembly"],
+        "handler": "_handle_manhole_accessory",
+    },
+    "coc": {
+        "patterns": ["coc_gasket", "coc", "bfcclamp"],
+        "handler": "_handle_coc_component",
+    },
+    "center_nozzle": {
+        "patterns": ["m_200_d_gasket"],
+        "handler": "_handle_center_nozzle",
+    },
+    "drive": {
+        "patterns": ["driveassembly", "shaftclosure", "agitator", "mechanical_seal", "sensor"],
+        "handler": "_handle_drive_component",
+    },
+    "nameplate": {
+        "patterns": ["nameplatebracket"],
+        "handler": "_handle_nameplate",
+    },
+}
 
 
 class Inventor:
@@ -99,6 +215,7 @@ class Inventor:
         """Initialize the Inventor wrapper with empty state."""
         self._occurrence_cache = {}
         self._used_nozzle_planes = []  # Track used work planes for nozzles
+        self._nozzle_state = {}  # Track nozzle geometry across components (keyed by 'n2_60', 'n3_95', etc.)
         self.inv_app = None
         self.tg = None
         self.main_assy_doc = None
@@ -374,6 +491,885 @@ class Inventor:
         mid_y = (pt1.Geometry.Y + pt2.Geometry.Y) / 2
         return tg.CreatePoint2d(mid_x, mid_y)
 
+    def _parse_component_name(self, component_name):
+        """
+        Parse component name to extract nozzle info.
+
+        Examples:
+            'n2_150_60_split_flange' → {'nozzle': 'n2', 'size': '150', 'degree': '60', 'fitting': 'split_flange'}
+            'n1_500_0_gasket' → {'nozzle': 'n1', 'size': '500', 'degree': '0', 'fitting': 'gasket'}
+            'm_200_d_gasket' → {'nozzle': 'm', 'size': '200', 'degree': 'd', 'fitting': 'gasket'}
+            'monoblock' → None (not a nozzle component)
+
+        Args:
+            component_name: Component name string
+
+        Returns:
+            dict with nozzle, size, degree, fitting keys, or None if not a nozzle component
+        """
+        if not component_name:
+            return None
+
+        parts = component_name.lower().split('_')
+
+        # Pattern: {nozzle}_{size}_{degree}_{fitting...}
+        # Examples: n2_150_60_split_flange, n1_500_0_gasket, m_200_d_gasket
+        if len(parts) >= 4:
+            nozzle = parts[0]  # 'n2', 'n1', 'm', etc.
+            size = parts[1]    # '150', '500', '200'
+            degree = parts[2]  # '60', '0', 'd'
+            fitting = '_'.join(parts[3:])  # 'split_flange', 'gasket', 'bolt/stud'
+
+            # Validate it looks like a nozzle component
+            if nozzle.startswith('n') or nozzle == 'm':
+                return {
+                    'nozzle': nozzle,
+                    'size': size,
+                    'degree': degree,
+                    'fitting': fitting
+                }
+
+        return None
+
+    def _is_vessel_nozzle(self, component_name):
+        """
+        Check if component is a vessel nozzle (N2, N3, N5, N6, N7, N9, N10).
+
+        Args:
+            component_name: Component name string
+
+        Returns:
+            bool: True if vessel nozzle component
+        """
+        parsed = self._parse_component_name(component_name)
+        if parsed and parsed['nozzle'] in ['n2', 'n3', 'n5', 'n6', 'n7', 'n9', 'n10']:
+            return True
+        return False
+
+    def _get_component_handler(self, component_name: str):
+        """
+        Match component name to handler using pattern matching.
+
+        First attempts to parse as nozzle component (n2_150_60_split_flange).
+        Falls back to exact/prefix matching for non-nozzle components.
+
+        Args:
+            component_name: Component name string
+
+        Returns:
+            tuple: (handler_method, config_dict, parsed_info) or (None, None, None)
+        """
+        # First, try to parse as nozzle component
+        parsed = self._parse_component_name(component_name)
+
+        if parsed and self._is_vessel_nozzle(component_name):
+            nozzle = parsed['nozzle']
+            fitting = parsed['fitting']
+
+            # Get nozzle and fitting configs
+            nozzle_config = NOZZLE_CONFIG.get(nozzle, {})
+            fitting_config = FITTING_CONFIG.get(fitting, {})
+            combined_config = {**nozzle_config, **fitting_config}
+
+            # Determine handler based on fitting type
+            if 'split_flange' in fitting:
+                return self._handle_nozzle_split_flange, combined_config, parsed
+            elif 'gasket' in fitting:
+                return self._handle_nozzle_gasket, combined_config, parsed
+            elif any(x in fitting for x in ['blind_cover', 'baffle', 'toughened_glass', 'sight']):
+                return self._handle_nozzle_cover, combined_config, parsed
+            elif any(x in fitting for x in ['bolt', 'stud', 'washer', 'nut']):
+                return self._handle_nozzle_fastener, combined_config, parsed
+
+        # Fall back to exact/prefix matching for non-nozzle components
+        for category, config in COMPONENT_HANDLERS.items():
+            for pattern in config["patterns"]:
+                if component_name == pattern or component_name.startswith(pattern):
+                    handler_name = config["handler"]
+                    if hasattr(self, handler_name):
+                        handler = getattr(self, handler_name)
+                        return handler, config, None
+
+        return None, None, None
+
+    # =========================================================================
+    # GENERIC NOZZLE ASSEMBLY HELPERS
+    # =========================================================================
+
+    def _get_nozzle_geometry(self, swagged_dish, nozzle_deg, tolerance=2.0):
+        """
+        Get the work plane and axis for a nozzle at a specific degree.
+
+        Args:
+            swagged_dish: The swagged dish occurrence
+            nozzle_deg: Target degree for the nozzle plane
+            tolerance: Degree tolerance for matching (default 2.0)
+
+        Returns:
+            tuple: (plane, axis) or (None, None) if not found
+        """
+        try:
+            plane = self.get_workplanes_by_degrees(
+                work_planes=swagged_dish.Definition.WorkPlanes,
+                target=nozzle_deg,
+                tolerance=tolerance
+            )
+            if plane is None:
+                logger.warning(f"No work plane found for degree {nozzle_deg}")
+                return None, None
+
+            axis = self.get_y_parallel_axis_from_plane(
+                work_axes=swagged_dish.Definition.WorkAxes,
+                plane=plane
+            )
+            if axis is None:
+                logger.warning(f"No Y-parallel axis found for plane at {nozzle_deg} degrees")
+                return None, None
+
+            return plane, axis
+        except Exception as e:
+            logger.error(f"Error getting nozzle geometry at {nozzle_deg} degrees: {e}")
+            return None, None
+
+    def _get_fastener_axis_proxy(self, occurrence, axis_names=None):
+        """
+        Get the fastener assembly axis proxy from an occurrence.
+        Tries the occurrence first, then sub-occurrences.
+
+        Args:
+            occurrence: The component occurrence (e.g., split flange)
+            axis_names: List of axis name variants to try
+
+        Returns:
+            Proxy for the fastener assembly axis, or None
+        """
+        axis_names = axis_names or ["Fastener Assly Axis", "Fastner Assly Axis"]
+
+        for axis_name in axis_names:
+            axis = self.get_work_axis(work_axes=occurrence.Definition.WorkAxes, axis_name=axis_name)
+            if axis is not None:
+                return occurrence.CreateGeometryProxy(axis)
+
+        # Try sub-occurrences
+        if hasattr(occurrence, "SubOccurrences") and occurrence.SubOccurrences.Count > 0:
+            sub_occ = occurrence.SubOccurrences.Item(1)
+            for axis_name in axis_names:
+                axis = self.get_work_axis(work_axes=sub_occ.Definition.WorkAxes, axis_name=axis_name)
+                if axis is not None:
+                    return sub_occ.CreateGeometryProxy(axis)
+
+        return None
+
+    def _get_top_face_plane_proxy(self, occurrence, plane_name="TOP FACE PLANE"):
+        """
+        Get the top face plane proxy from an occurrence.
+        Tries the occurrence first, then sub-occurrences.
+
+        Args:
+            occurrence: The component occurrence
+            plane_name: Name of the plane to find
+
+        Returns:
+            Proxy for the top face plane, or None
+        """
+        plane = self.get_work_plane(work_planes=occurrence.Definition.WorkPlanes, plane_name=plane_name)
+        if plane is not None:
+            return occurrence.CreateGeometryProxy(plane)
+
+        # Try sub-occurrences
+        if hasattr(occurrence, "SubOccurrences") and occurrence.SubOccurrences.Count > 0:
+            sub_occ = occurrence.SubOccurrences.Item(1)
+            plane = self.get_work_plane(work_planes=sub_occ.Definition.WorkPlanes, plane_name=plane_name)
+            if plane is not None:
+                return sub_occ.CreateGeometryProxy(plane)
+
+        return None
+
+    def _add_nozzle_split_flange(self, main_assy_def, tg, filepath, swagged_dish,
+                                  nozzle_axis, nozzle_plane, monoblock, nozzle_size):
+        """
+        Add a split flange for a vessel nozzle and apply standard constraints.
+
+        Args:
+            main_assy_def: Assembly definition
+            tg: TransientGeometry object
+            filepath: Path to the split flange file
+            swagged_dish: Swagged dish occurrence
+            nozzle_axis: Nozzle axis on swagged dish
+            nozzle_plane: Nozzle plane on swagged dish
+            monoblock: Monoblock occurrence
+            nozzle_size: Size of the nozzle (for plane lookup)
+
+        Returns:
+            dict with occurrence and proxy references, or None on failure
+        """
+        try:
+            occ = main_assy_def.Occurrences.Add(filepath, tg.CreateMatrix())
+            occ.Grounded = False
+
+            # Get geometry proxies
+            y_axis_proxy = occ.CreateGeometryProxy(occ.Definition.WorkAxes["Y Axis"])
+            xy_plane_proxy = occ.CreateGeometryProxy(occ.Definition.WorkPlanes["XY PLANE"])
+
+            # Get fastener axis and top face plane
+            fastener_axis_proxy = self._get_fastener_axis_proxy(occ)
+            top_face_plane_proxy = self._get_top_face_plane_proxy(occ)
+
+            # Get swagged dish proxies
+            swagged_dish_axis_proxy = swagged_dish.CreateGeometryProxy(nozzle_axis)
+            swagged_dish_plane_proxy = swagged_dish.CreateGeometryProxy(nozzle_plane)
+
+            # Get monoblock nozzle height plane
+            monoblock_fabricated = monoblock.SubOccurrences.Item(1)
+            monoblock_nozzle_plane = self.get_work_plane(
+                work_planes=monoblock_fabricated.Definition.WorkPlanes,
+                plane_name=f"{nozzle_size} NB"
+            )
+            monoblock_nozzle_plane_proxy = monoblock_fabricated.CreateGeometryProxy(monoblock_nozzle_plane)
+
+            # Apply constraints
+            self._add_mate_constraint(main_assy_def, swagged_dish_axis_proxy, y_axis_proxy)
+            self._add_flush_constraint(main_assy_def, swagged_dish_plane_proxy, xy_plane_proxy)
+            self._add_flush_constraint(main_assy_def, monoblock_nozzle_plane_proxy, top_face_plane_proxy, -2.0)
+
+            self.hide_workplanes_recursively(occurrence=occ)
+
+            return {
+                'occurrence': occ,
+                'y_axis_proxy': y_axis_proxy,
+                'xy_plane_proxy': xy_plane_proxy,
+                'fastener_axis_proxy': fastener_axis_proxy,
+                'top_face_plane_proxy': top_face_plane_proxy,
+                'swagged_dish_axis_proxy': swagged_dish_axis_proxy,
+                'swagged_dish_plane_proxy': swagged_dish_plane_proxy
+            }
+        except Exception as e:
+            logger.error(f"Error adding split flange: {e}")
+            return None
+
+    def _add_nozzle_gasket(self, main_assy_def, tg, filepath, swagged_dish_axis_proxy,
+                           swagged_dish_plane_proxy, flange_top_face_proxy, slit_envelope_name=None):
+        """
+        Add a gasket for a vessel nozzle.
+
+        Args:
+            main_assy_def: Assembly definition
+            tg: TransientGeometry object
+            filepath: Path to the gasket file
+            swagged_dish_axis_proxy: Axis proxy on swagged dish
+            swagged_dish_plane_proxy: Plane proxy on swagged dish
+            flange_top_face_proxy: Top face plane proxy from the split flange
+            slit_envelope_name: Name to search for slit envelope (optional)
+
+        Returns:
+            dict with occurrence and proxy references, or None on failure
+        """
+        try:
+            occ = main_assy_def.Occurrences.Add(filepath, tg.CreateMatrix())
+            occ.Grounded = False
+
+            y_axis_proxy = occ.CreateGeometryProxy(occ.Definition.WorkAxes["Y Axis"])
+            xy_plane_proxy = occ.CreateGeometryProxy(occ.Definition.WorkPlanes["XY PLANE"])
+            xz_plane_proxy = occ.CreateGeometryProxy(occ.Definition.WorkPlanes["XZ PLANE"])
+
+            # Try to find gasket ref plane in slit envelope
+            gasket_ref_plane = None
+            if slit_envelope_name:
+                slit_envelope = self.find_occurrence_recursive(
+                    occurrences=occ.SubOccurrences,
+                    target_name=slit_envelope_name
+                )
+                if slit_envelope:
+                    gasket_ref_plane = slit_envelope.CreateGeometryProxy(
+                        slit_envelope.Definition.WorkPlanes["GASKET REF PLANE"]
+                    )
+            else:
+                # Try generic search
+                slit_envelope = self.find_occurrence_recursive(
+                    occurrences=occ.SubOccurrences,
+                    target_name='SLIT ENVELOPE'
+                )
+                if slit_envelope:
+                    gasket_ref_plane = slit_envelope.CreateGeometryProxy(
+                        slit_envelope.Definition.WorkPlanes["GASKET REF PLANE"]
+                    )
+
+            # Apply constraints
+            self._add_mate_constraint(main_assy_def, swagged_dish_axis_proxy, y_axis_proxy)
+            self._add_flush_constraint(main_assy_def, swagged_dish_plane_proxy, xy_plane_proxy)
+            self._add_flush_constraint(main_assy_def, flange_top_face_proxy, xz_plane_proxy, 2.2)
+
+            return {
+                'occurrence': occ,
+                'y_axis_proxy': y_axis_proxy,
+                'xy_plane_proxy': xy_plane_proxy,
+                'xz_plane_proxy': xz_plane_proxy,
+                'gasket_ref_plane': gasket_ref_plane
+            }
+        except Exception as e:
+            logger.error(f"Error adding gasket: {e}")
+            return None
+
+    def _add_nozzle_cover(self, main_assy_def, tg, filepath, gasket_y_axis_proxy,
+                          flange_xy_plane_proxy, gasket_ref_plane, use_angle=True, angle_deg='22.5 deg'):
+        """
+        Add a blind cover or baffle for a vessel nozzle.
+
+        Args:
+            main_assy_def: Assembly definition
+            tg: TransientGeometry object
+            filepath: Path to the cover file
+            gasket_y_axis_proxy: Y axis proxy from the gasket
+            flange_xy_plane_proxy: XY plane proxy from the split flange
+            gasket_ref_plane: Gasket reference plane proxy
+            use_angle: Whether to use angle constraint instead of flush (default True)
+            angle_deg: Angle for angle constraint (default '22.5 deg')
+
+        Returns:
+            dict with occurrence and proxy references, or None on failure
+        """
+        try:
+            occ = main_assy_def.Occurrences.Add(filepath, tg.CreateMatrix())
+            occ.Grounded = False
+
+            y_axis_proxy = occ.CreateGeometryProxy(occ.Definition.WorkAxes["Y Axis"])
+            xy_plane_proxy = occ.CreateGeometryProxy(occ.Definition.WorkPlanes["XY PLANE"])
+            xz_plane_proxy = occ.CreateGeometryProxy(occ.Definition.WorkPlanes["XZ PLANE"])
+
+            # Apply constraints
+            self._add_mate_constraint(main_assy_def, gasket_y_axis_proxy, y_axis_proxy)
+
+            if use_angle:
+                main_assy_def.Constraints.AddAngleConstraint(
+                    flange_xy_plane_proxy, xy_plane_proxy, angle_deg, 78593, None, None, None
+                )
+            else:
+                self._add_flush_constraint(main_assy_def, flange_xy_plane_proxy, xy_plane_proxy)
+
+            if gasket_ref_plane:
+                self._add_flush_constraint(main_assy_def, gasket_ref_plane, xz_plane_proxy, 0)
+
+            return {
+                'occurrence': occ,
+                'y_axis_proxy': y_axis_proxy,
+                'xy_plane_proxy': xy_plane_proxy,
+                'xz_plane_proxy': xz_plane_proxy
+            }
+        except Exception as e:
+            logger.error(f"Error adding cover: {e}")
+            return None
+
+    def _add_nozzle_fastener(self, main_assy_def, tg, filepath, flange_fastener_axis_proxy,
+                              cover_xz_plane_proxy, cover_xy_plane_proxy, flush_offset=-1.8):
+        """
+        Add a fastener (bolt/stud) for a vessel nozzle.
+
+        Args:
+            main_assy_def: Assembly definition
+            tg: TransientGeometry object
+            filepath: Path to the fastener file
+            flange_fastener_axis_proxy: Fastener axis proxy from the split flange
+            cover_xz_plane_proxy: XZ plane proxy from the cover
+            cover_xy_plane_proxy: XY plane proxy from the cover
+            flush_offset: Offset for flush constraint (default -1.8)
+
+        Returns:
+            dict with occurrence and proxy references, or None on failure
+        """
+        try:
+            occ = main_assy_def.Occurrences.Add(filepath, tg.CreateMatrix())
+            occ.Grounded = False
+
+            y_axis_proxy = occ.CreateGeometryProxy(occ.Definition.WorkAxes["Y Axis"])
+            xy_plane_proxy = occ.CreateGeometryProxy(occ.Definition.WorkPlanes["XY PLANE"])
+            xz_plane_proxy = occ.CreateGeometryProxy(occ.Definition.WorkPlanes["XZ PLANE"])
+
+            # Apply constraints
+            self._add_mate_constraint(main_assy_def, y_axis_proxy, flange_fastener_axis_proxy)
+            self._add_flush_constraint(main_assy_def, xz_plane_proxy, cover_xz_plane_proxy, flush_offset)
+            main_assy_def.Constraints.AddAngleConstraint(
+                xy_plane_proxy, cover_xy_plane_proxy, 0, 78593, None, None, None
+            )
+
+            return {
+                'occurrence': occ,
+                'y_axis_proxy': y_axis_proxy,
+                'xy_plane_proxy': xy_plane_proxy,
+                'xz_plane_proxy': xz_plane_proxy
+            }
+        except Exception as e:
+            logger.error(f"Error adding fastener: {e}")
+            return None
+
+    def _add_nozzle_washer(self, main_assy_def, tg, filepath, fastener_y_axis_proxy,
+                            fastener_xy_plane_proxy, flange_top_face_proxy, mate_offset=-2.2):
+        """
+        Add a washer for a vessel nozzle.
+
+        Args:
+            main_assy_def: Assembly definition
+            tg: TransientGeometry object
+            filepath: Path to the washer file
+            fastener_y_axis_proxy: Y axis proxy from the fastener
+            fastener_xy_plane_proxy: XY plane proxy from the fastener
+            flange_top_face_proxy: Top face plane proxy from the split flange
+            mate_offset: Offset for mate constraint (default -2.2)
+
+        Returns:
+            dict with occurrence and proxy references, or None on failure
+        """
+        try:
+            occ = main_assy_def.Occurrences.Add(filepath, tg.CreateMatrix())
+            occ.Grounded = False
+
+            y_axis_proxy = occ.CreateGeometryProxy(occ.Definition.WorkAxes["Y Axis"])
+            xy_plane_proxy = occ.CreateGeometryProxy(occ.Definition.WorkPlanes["XY PLANE"])
+            xz_plane_proxy = occ.CreateGeometryProxy(occ.Definition.WorkPlanes["XZ PLANE"])
+            fastener_assly_plane_proxy = occ.CreateGeometryProxy(
+                occ.Definition.WorkPlanes["Fastener Assly Plane"]
+            )
+
+            # Apply constraints
+            self._add_mate_constraint(main_assy_def, y_axis_proxy, fastener_y_axis_proxy)
+            main_assy_def.Constraints.AddMateConstraint(
+                xz_plane_proxy, flange_top_face_proxy, mate_offset,
+                MATE_CONSTRAINT_INFERENCE_1, MATE_CONSTRAINT_INFERENCE_2, None, None
+            )
+            self._add_flush_constraint(main_assy_def, xy_plane_proxy, fastener_xy_plane_proxy)
+
+            return {
+                'occurrence': occ,
+                'y_axis_proxy': y_axis_proxy,
+                'xy_plane_proxy': xy_plane_proxy,
+                'xz_plane_proxy': xz_plane_proxy,
+                'fastener_assly_plane_proxy': fastener_assly_plane_proxy
+            }
+        except Exception as e:
+            logger.error(f"Error adding washer: {e}")
+            return None
+
+    def _add_nozzle_nut(self, main_assy_def, tg, filepath, washer_y_axis_proxy,
+                         washer_xy_plane_proxy, washer_fastener_assly_plane_proxy):
+        """
+        Add a nut for a vessel nozzle.
+
+        Args:
+            main_assy_def: Assembly definition
+            tg: TransientGeometry object
+            filepath: Path to the nut file
+            washer_y_axis_proxy: Y axis proxy from the washer
+            washer_xy_plane_proxy: XY plane proxy from the washer
+            washer_fastener_assly_plane_proxy: Fastener assembly plane proxy from the washer
+
+        Returns:
+            dict with occurrence and proxy references, or None on failure
+        """
+        try:
+            occ = main_assy_def.Occurrences.Add(filepath, tg.CreateMatrix())
+            occ.Grounded = False
+
+            y_axis_proxy = occ.CreateGeometryProxy(occ.Definition.WorkAxes["Y Axis"])
+            xy_plane_proxy = occ.CreateGeometryProxy(occ.Definition.WorkPlanes["XY PLANE"])
+            xz_plane_proxy = occ.CreateGeometryProxy(occ.Definition.WorkPlanes["XZ PLANE"])
+
+            # Apply constraints
+            self._add_mate_constraint(main_assy_def, y_axis_proxy, washer_y_axis_proxy)
+            self._add_flush_constraint(main_assy_def, xz_plane_proxy, washer_fastener_assly_plane_proxy)
+            self._add_flush_constraint(main_assy_def, xy_plane_proxy, washer_xy_plane_proxy)
+
+            return {
+                'occurrence': occ,
+                'y_axis_proxy': y_axis_proxy,
+                'xy_plane_proxy': xy_plane_proxy,
+                'xz_plane_proxy': xz_plane_proxy
+            }
+        except Exception as e:
+            logger.error(f"Error adding nut: {e}")
+            return None
+
+    def _create_fastener_pattern(self, main_assy_def, fastener, washer, nut, pattern_axis, count=8):
+        """
+        Create a circular pattern for fastener set (bolt + washer + nut).
+
+        Args:
+            main_assy_def: Assembly definition
+            fastener: Fastener occurrence
+            washer: Washer occurrence
+            nut: Nut occurrence
+            pattern_axis: Axis to pattern around
+            count: Number of instances (default 8)
+
+        Returns:
+            CircularOccurrencePattern or None on failure
+        """
+        try:
+            return self._create_circular_pattern(
+                main_assy_def,
+                [fastener, washer, nut],
+                pattern_axis,
+                count
+            )
+        except Exception as e:
+            logger.error(f"Error creating fastener pattern: {e}")
+            return None
+
+    # =========================================================================
+    # DYNAMIC COMPONENT HANDLERS
+    # These methods are called by _get_component_handler for dynamic dispatch
+    # =========================================================================
+
+    def _handle_nozzle_split_flange(self, item, config, parsed, context):
+        """
+        Handle any nozzle split_flange component dynamically.
+
+        Args:
+            item: Component item dict with filepath, component name, etc.
+            config: Combined nozzle and fitting config
+            parsed: Parsed component name info (nozzle, size, degree, fitting)
+            context: Shared context with main_assy_def, swagged_dish, etc.
+
+        Returns:
+            Occurrence or None
+        """
+        nozzle_name = parsed['nozzle']
+        nozzle_deg = parsed['degree']
+        nozzle_size = parsed['size']
+
+        print(f"Start: {nozzle_name}_{nozzle_size}_{nozzle_deg}_split_flange")
+
+        # Get swagged dish reference
+        swagged_dish = context.get('swagged_dish')
+        if swagged_dish is None:
+            swagged_dish = self.find_occurrence_recursive(
+                occurrences=context['main_assy_def'].Occurrences,
+                target_name="CT-1950"
+            )
+            context['swagged_dish'] = swagged_dish
+
+        if swagged_dish is None:
+            print(f"Warning: Could not find swagged_dish for {nozzle_name}")
+            return None
+
+        # Get geometry for this nozzle degree
+        plane, axis = self._get_nozzle_geometry(swagged_dish, nozzle_deg)
+        if axis is None or plane is None:
+            print(f"Warning: Could not find plane/axis for {nozzle_name} at {nozzle_deg}°")
+            return None
+
+        # Mark plane as used
+        self._used_nozzle_planes.append(plane.Name)
+
+        # Add component
+        main_assy_def = context['main_assy_def']
+        tg = context['tg']
+        occurrence = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
+        occurrence.Grounded = False
+
+        # Create proxies
+        y_axis_proxy = occurrence.CreateGeometryProxy(occurrence.Definition.WorkAxes["Y Axis"])
+        xy_plane_proxy = occurrence.CreateGeometryProxy(occurrence.Definition.WorkPlanes["XY PLANE"])
+
+        # Get fastener axis and top face plane for subsequent components
+        fastener_axis = self._get_fastener_axis_proxy(occurrence)
+        top_face_plane = self._get_top_face_plane_proxy(occurrence)
+
+        # Create dish proxies and apply constraints
+        dish_axis_proxy = swagged_dish.CreateGeometryProxy(axis)
+        dish_plane_proxy = swagged_dish.CreateGeometryProxy(plane)
+
+        # Get monoblock nozzle height plane
+        monoblock = context.get('monoblock')
+        monoblock_plane_proxy = None
+        if monoblock:
+            monoblock_fabricated = monoblock.SubOccurrences.Item(1)
+            monoblock_plane = self.get_work_plane(
+                work_planes=monoblock_fabricated.Definition.WorkPlanes,
+                plane_name=f"{nozzle_size} NB"
+            )
+            if monoblock_plane:
+                monoblock_plane_proxy = monoblock_fabricated.CreateGeometryProxy(monoblock_plane)
+
+        # Apply constraints
+        self._add_mate_constraint(main_assy_def, dish_axis_proxy, y_axis_proxy)
+        self._add_flush_constraint(main_assy_def, dish_plane_proxy, xy_plane_proxy)
+        if monoblock_plane_proxy and top_face_plane:
+            self._add_flush_constraint(main_assy_def, monoblock_plane_proxy, top_face_plane, -2.0)
+
+        # Store state for subsequent components
+        nozzle_key = f"{nozzle_name}_{nozzle_deg}"
+        self._nozzle_state[nozzle_key] = {
+            'occurrence': occurrence,
+            'axis': axis,
+            'plane': plane,
+            'dish_axis_proxy': dish_axis_proxy,
+            'dish_plane_proxy': dish_plane_proxy,
+            'fastener_axis': fastener_axis,
+            'top_face_plane': top_face_plane,
+            'y_axis_proxy': y_axis_proxy,
+            'xy_plane_proxy': xy_plane_proxy,
+        }
+
+        self.hide_workplanes_recursively(occurrence)
+        print(f"End: {nozzle_name}_{nozzle_size}_{nozzle_deg}_split_flange")
+        return occurrence
+
+    def _handle_nozzle_gasket(self, item, config, parsed, context):
+        """
+        Handle any nozzle gasket component dynamically.
+
+        Args:
+            item: Component item dict
+            config: Combined nozzle and fitting config
+            parsed: Parsed component name info
+            context: Shared context
+
+        Returns:
+            Occurrence or None
+        """
+        nozzle_name = parsed['nozzle']
+        nozzle_deg = parsed['degree']
+        nozzle_size = parsed['size']
+        nozzle_key = f"{nozzle_name}_{nozzle_deg}"
+
+        print(f"Start: {nozzle_name}_{nozzle_size}_{nozzle_deg}_gasket")
+
+        state = self._nozzle_state.get(nozzle_key)
+        if not state:
+            print(f"Warning: No split_flange state for {nozzle_key}, skipping gasket")
+            return None
+
+        # Add component
+        main_assy_def = context['main_assy_def']
+        tg = context['tg']
+        occurrence = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
+        occurrence.Grounded = False
+
+        # Create proxies
+        y_axis_proxy = occurrence.CreateGeometryProxy(occurrence.Definition.WorkAxes["Y Axis"])
+        xy_plane_proxy = occurrence.CreateGeometryProxy(occurrence.Definition.WorkPlanes["XY PLANE"])
+        xz_plane_proxy = occurrence.CreateGeometryProxy(occurrence.Definition.WorkPlanes["XZ PLANE"])
+
+        # Try to find gasket ref plane for subsequent components
+        gasket_ref_plane = None
+        slit_envelope_name = f"DN{nozzle_size}_" if nozzle_size else "SLIT ENVELOPE"
+        slit_envelope = self.find_occurrence_by_keyword_recursive(
+            occurrences=occurrence.SubOccurrences,
+            target_keyword="SLIT ENVELOPE"
+        )
+        if slit_envelope:
+            gasket_ref_plane = self.get_work_plane(
+                work_planes=slit_envelope.Definition.WorkPlanes,
+                plane_name="GASKET REF PLANE"
+            )
+            if gasket_ref_plane:
+                gasket_ref_plane = slit_envelope.CreateGeometryProxy(gasket_ref_plane)
+
+        # Apply constraints
+        offset = config.get('offset', 2.2)
+        self._add_mate_constraint(main_assy_def, state['dish_axis_proxy'], y_axis_proxy)
+        self._add_flush_constraint(main_assy_def, state['dish_plane_proxy'], xy_plane_proxy)
+        if state.get('top_face_plane'):
+            self._add_flush_constraint(main_assy_def, state['top_face_plane'], xz_plane_proxy, offset)
+
+        # Update state with gasket reference
+        state['gasket'] = occurrence
+        state['gasket_y_axis_proxy'] = y_axis_proxy
+        state['gasket_xy_plane_proxy'] = xy_plane_proxy
+        state['gasket_xz_plane_proxy'] = xz_plane_proxy
+        state['gasket_ref_plane'] = gasket_ref_plane
+
+        self.hide_workplanes_recursively(occurrence)
+        print(f"End: {nozzle_name}_{nozzle_size}_{nozzle_deg}_gasket")
+        return occurrence
+
+    def _handle_nozzle_cover(self, item, config, parsed, context):
+        """
+        Handle nozzle cover components (blind_cover, baffle, toughened_glass, sight_glass).
+
+        Args:
+            item: Component item dict
+            config: Combined nozzle and fitting config
+            parsed: Parsed component name info
+            context: Shared context
+
+        Returns:
+            Occurrence or None
+        """
+        nozzle_name = parsed['nozzle']
+        nozzle_deg = parsed['degree']
+        nozzle_size = parsed['size']
+        fitting = parsed['fitting']
+        nozzle_key = f"{nozzle_name}_{nozzle_deg}"
+
+        print(f"Start: {nozzle_name}_{nozzle_size}_{nozzle_deg}_{fitting}")
+
+        state = self._nozzle_state.get(nozzle_key)
+        if not state:
+            print(f"Warning: No state for {nozzle_key}, skipping {fitting}")
+            return None
+
+        # Add component
+        main_assy_def = context['main_assy_def']
+        tg = context['tg']
+        occurrence = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
+        occurrence.Grounded = False
+
+        # Create proxies
+        y_axis_proxy = occurrence.CreateGeometryProxy(occurrence.Definition.WorkAxes["Y Axis"])
+        xy_plane_proxy = occurrence.CreateGeometryProxy(occurrence.Definition.WorkPlanes["XY PLANE"])
+        xz_plane_proxy = occurrence.CreateGeometryProxy(occurrence.Definition.WorkPlanes["XZ PLANE"])
+
+        # Apply constraints based on cover type
+        gasket_y_axis = state.get('gasket_y_axis_proxy')
+        gasket_ref_plane = state.get('gasket_ref_plane')
+        split_flange_xy = state.get('xy_plane_proxy')
+
+        if gasket_y_axis:
+            self._add_mate_constraint(main_assy_def, gasket_y_axis, y_axis_proxy)
+        if split_flange_xy:
+            self._add_flush_constraint(main_assy_def, split_flange_xy, xy_plane_proxy)
+        if gasket_ref_plane:
+            self._add_flush_constraint(main_assy_def, gasket_ref_plane, xz_plane_proxy, 0)
+
+        # Store cover reference for fastener pattern
+        state['cover'] = occurrence
+        state['cover_y_axis_proxy'] = y_axis_proxy
+        state['cover_xy_plane_proxy'] = xy_plane_proxy
+        state['cover_xz_plane_proxy'] = xz_plane_proxy
+
+        self.hide_workplanes_recursively(occurrence)
+        print(f"End: {nozzle_name}_{nozzle_size}_{nozzle_deg}_{fitting}")
+        return occurrence
+
+    def _handle_nozzle_fastener(self, item, config, parsed, context):
+        """
+        Handle nozzle fastener components (bolt/stud, washer, nut).
+        Creates circular pattern when nut is processed.
+
+        Args:
+            item: Component item dict
+            config: Combined nozzle and fitting config
+            parsed: Parsed component name info
+            context: Shared context
+
+        Returns:
+            Occurrence or None
+        """
+        nozzle_name = parsed['nozzle']
+        nozzle_deg = parsed['degree']
+        nozzle_size = parsed['size']
+        fitting = parsed['fitting']
+        nozzle_key = f"{nozzle_name}_{nozzle_deg}"
+
+        print(f"Start: {nozzle_name}_{nozzle_size}_{nozzle_deg}_{fitting}")
+
+        state = self._nozzle_state.get(nozzle_key)
+        if not state:
+            print(f"Warning: No state for {nozzle_key}, skipping {fitting}")
+            return None
+
+        # Add component
+        main_assy_def = context['main_assy_def']
+        tg = context['tg']
+        inv_app = context['inv_app']
+        occurrence = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
+        occurrence.Grounded = False
+
+        # Create proxies
+        y_axis_proxy = occurrence.CreateGeometryProxy(occurrence.Definition.WorkAxes["Y Axis"])
+        xy_plane_proxy = occurrence.CreateGeometryProxy(occurrence.Definition.WorkPlanes["XY PLANE"])
+        xz_plane_proxy = occurrence.CreateGeometryProxy(occurrence.Definition.WorkPlanes["XZ PLANE"])
+
+        if 'bolt' in fitting or 'stud' in fitting:
+            # Position bolt using fastener axis from split flange
+            fastener_axis = state.get('fastener_axis')
+            cover_xz = state.get('cover_xz_plane_proxy')
+            cover_xy = state.get('cover_xy_plane_proxy')
+
+            if fastener_axis:
+                self._add_mate_constraint(main_assy_def, y_axis_proxy, fastener_axis)
+            if cover_xz:
+                self._add_flush_constraint(main_assy_def, xz_plane_proxy, cover_xz, -1.8)
+            if cover_xy:
+                main_assy_def.Constraints.AddAngleConstraint(xy_plane_proxy, cover_xy, 0, 78593, None, None, None)
+
+            state['bolt'] = occurrence
+            state['bolt_y_axis_proxy'] = y_axis_proxy
+            state['bolt_xy_plane_proxy'] = xy_plane_proxy
+            state['bolt_xz_plane_proxy'] = xz_plane_proxy
+
+        elif 'washer' in fitting:
+            # Position washer relative to bolt
+            bolt_y_axis = state.get('bolt_y_axis_proxy')
+            bolt_xy = state.get('bolt_xy_plane_proxy')
+            top_face = state.get('top_face_plane')
+
+            # Get washer fastener assembly plane
+            washer_fastener_plane = None
+            try:
+                washer_fastener_plane = occurrence.CreateGeometryProxy(
+                    occurrence.Definition.WorkPlanes["Fastener Assly Plane"]
+                )
+            except:
+                pass
+
+            if bolt_y_axis:
+                self._add_mate_constraint(main_assy_def, y_axis_proxy, bolt_y_axis)
+            if top_face:
+                main_assy_def.Constraints.AddMateConstraint(xz_plane_proxy, top_face, -2.2, 24833, 24833, None, None)
+            if bolt_xy:
+                self._add_flush_constraint(main_assy_def, xy_plane_proxy, bolt_xy)
+
+            state['washer'] = occurrence
+            state['washer_y_axis_proxy'] = y_axis_proxy
+            state['washer_xy_plane_proxy'] = xy_plane_proxy
+            state['washer_fastener_plane'] = washer_fastener_plane
+
+        elif 'nut' in fitting:
+            # Position nut relative to washer
+            washer_y_axis = state.get('washer_y_axis_proxy')
+            washer_xy = state.get('washer_xy_plane_proxy')
+            washer_fastener_plane = state.get('washer_fastener_plane')
+
+            if washer_y_axis:
+                self._add_mate_constraint(main_assy_def, y_axis_proxy, washer_y_axis)
+            if washer_fastener_plane:
+                self._add_flush_constraint(main_assy_def, xz_plane_proxy, washer_fastener_plane)
+            if washer_xy:
+                self._add_flush_constraint(main_assy_def, xy_plane_proxy, washer_xy)
+
+            state['nut'] = occurrence
+
+            # Create circular pattern for bolt + washer + nut
+            bolt = state.get('bolt')
+            washer = state.get('washer')
+            pattern_axis = state.get('cover_y_axis_proxy', state.get('y_axis_proxy'))
+            fastener_count = config.get('fastener_count', 8)
+
+            if bolt and washer and pattern_axis:
+                try:
+                    collection = inv_app.TransientObjects.CreateObjectCollection()
+                    collection.Add(bolt)
+                    collection.Add(washer)
+                    collection.Add(occurrence)
+
+                    angle = math.radians(360 / fastener_count)
+                    occurrence_patterns = main_assy_def.OccurrencePatterns
+                    circular_pattern = occurrence_patterns.AddCircularPattern(
+                        ParentComponents=collection,
+                        AxisEntity=pattern_axis,
+                        AxisEntityNaturalDirection=True,
+                        AngleOffset=angle,
+                        Count=fastener_count
+                    )
+                    print(f"Created circular pattern with {fastener_count} fasteners")
+                except Exception as e:
+                    print(f"Error creating circular pattern: {e}")
+
+        self.hide_workplanes_recursively(occurrence)
+        print(f"End: {nozzle_name}_{nozzle_size}_{nozzle_deg}_{fitting}")
+        return occurrence
+
     # =========================================================================
     # MAIN METHODS
     # =========================================================================
@@ -421,18 +1417,20 @@ class Inventor:
                 return i
         return len(component_order)  # everything else goes last
     
-    def generate(self, components, model_details):
+    def generate(self, components, model_details, use_dynamic_handlers=False):
         """
         Generate 3D assembly from component list.
 
         Args:
             components: List of component dicts with 'component' and 'filepath' keys
             model_details: Model configuration details
+            use_dynamic_handlers: If True, use new dynamic handler system for nozzle
+                                  components (N2-N10). Default False uses existing code.
 
         Returns:
             bool: True if generation successful
         """
-          
+
         # Ensure connection to Inventor
         self._ensure_connected()
 
@@ -441,6 +1439,9 @@ class Inventor:
 
         # Reset used nozzle planes list for fresh generation
         self._used_nozzle_planes = []
+
+        # Reset nozzle state for fresh generation
+        self._nozzle_state = {}
 
         # Sort components by priority using module-level constant
         sorted_components = sorted(
@@ -464,6 +1465,39 @@ class Inventor:
 
         monoblock = jacket = diapharm = sidebracket = jacketnozzle = None
 
+        # Context for dynamic handlers (shared state across handler calls)
+        handler_context = {
+            'inv_app': inv_app,
+            'tg': tg,
+            'main_assy_def': main_assy_def,
+            'monoblock': None,
+            'jacket': None,
+            'swagged_dish': None,
+        }
+
+        # Initialize manhole components and proxies (used by spring balance assembly and other components)
+        manhole_cover = None
+        manhole_cover_y_axis_proxy = None
+        manhole_cover_xy_plane_proxy = None
+        manhole_cover_xz_plane_proxy = None
+        manhole_cover_yz_plane_proxy = None
+        manhole_stump = None
+        manhole_stump_y_axis_proxy = None
+        manhole_stump_xy_plane_proxy = None
+
+        # Initialize COC components and proxies (used by coc and bfcclamp components)
+        coc_gasket = None
+        coc_gasket_y_axis_proxy = None
+        coc_gasket_xy_plane_proxy = None
+        coc_gasket_xz_plane_proxy = None
+        coc_body_flange = None
+        coc_body_flange_xz_plane_proxy = None
+        coc = None
+        coc_y_axis_proxy = None
+        coc_xy_plane_proxy = None
+        coc_xz_plane_proxy = None
+        coc_yz_plane_proxy = None
+
         # Bring Inventor window to front
         window_title = inv_app.Caption
         try:
@@ -473,6 +1507,31 @@ class Inventor:
             logger.warning(f"Could not bring Inventor window to front: {e}")
         try:
             for idx, item in enumerate(sorted_components):
+                component_name = item.get("component", "")
+
+                # Dynamic handler dispatch (when use_dynamic_handlers=True)
+                if use_dynamic_handlers:
+                    handler, config, parsed = self._get_component_handler(component_name)
+                    if handler is not None:
+                        try:
+                            logger.info(f"[DYNAMIC] Processing: {component_name}")
+                            result = handler(item, config, parsed, handler_context)
+
+                            # Update context with key references for subsequent components
+                            if component_name == 'monoblock':
+                                handler_context['monoblock'] = result
+                                monoblock = result  # Keep local var for existing code compatibility
+                            elif component_name == 'jacket':
+                                handler_context['jacket'] = result
+                                jacket = result
+
+                            continue  # Skip to next component, handler processed this one
+                        except Exception as e:
+                            print(f"[DYNAMIC] Error with handler for {component_name}: {e}")
+                            print(f"[DYNAMIC] Falling back to static matching...")
+                            # Fall through to static matching below
+
+                # Static matching (existing code)
                 if item.get("component") == 'monoblock':
                     logger.info("Start: Monoblock")
                     monoblock = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
@@ -495,6 +1554,7 @@ class Inventor:
                     monoblock_flush_xz = self._add_flush_constraint(main_assy_def, main_xz_plane, monoblock_xz_plane)
 
                     self.hide_workplanes_recursively(occurrence=monoblock)
+                    handler_context['monoblock'] = monoblock  # Update context for dynamic handlers
                     logger.info("End: Monoblock")
 
                 elif item.get("component") == 'jacket':
@@ -520,10 +1580,12 @@ class Inventor:
                     jacket_flush_xz = self._add_flush_constraint(main_assy_def, jacket_xz_plane, monoblock_xz_plane, "52 mm")
 
                     self.hide_workplanes_recursively(occurrence=jacket)
+                    handler_context['jacket'] = jacket  # Update context for dynamic handlers
                     logger.info("End: Jacket")
 
                     # JSR CUT
-                    print("JSR mounting cut start")
+                    # print("JSR mounting cut start")
+                    logger.info("Start: JSR mounting cut")
                     main_xy_plane = main_assy_def.WorkPlanes["XY Plane"]
                     jsr_sketch = main_assy_def.Sketches.Add(main_xy_plane)
 
@@ -623,7 +1685,7 @@ class Inventor:
                     swagged_dish = self.find_occurrence_recursive(occurrences=main_assy_def.Occurrences, target_name="CT-1950")
                     revolve_feature.RemoveParticipant(swagged_dish)
 
-                    print("print")
+                    logger.info("End: JSR mounting cut")
 
                 elif item.get("component") == 'diaphragmring':
                     logger.info("Start: Diaphragm Ring")
@@ -651,7 +1713,8 @@ class Inventor:
                     diapharm_flush_xz = self._add_flush_constraint(main_assy_def, diapharm_xz_plane, btm_jcr_xz_plane, "40 mm")     
                     
                     self.hide_workplanes_recursively(occurrence=diapharm)
-                    print("Start Bottom JSR Cut")
+                    # print("Start Bottom JSR Cut")
+                    logger.info("Start: Bottom JSR Cut")
                     jacket_diapharm_ring = self.find_occurrence_recursive(occurrences=main_assy_def.Occurrences, target_name="3616000548 01")
 
                     jacket_diapharm_ring_xz_plane_proxy = jacket_diapharm_ring.CreateGeometryProxy(jacket_diapharm_ring.Definition.WorkPlanes["XZ Plane"])
@@ -685,11 +1748,14 @@ class Inventor:
                     extrude.RemoveParticipant(jacket_diapharm_ring)
                     extrude.RemoveParticipant(comp_9100_Glass)
                     extrude.RemoveParticipant(_3701CEQB0412)
-
-                    print("End diapharmring")
+                    logger.info("End: Bottom JSR Cut")
+                    
+                    # print("End diapharmring")
+                    logger.info("End: Diapharmring")
 
                 elif item.get("component") == 'sidebracket':
-                    print("Start sidebracket")
+                    # print("Start sidebracket")
+                    logger.info("Start: Sidebracket")
                     sidebracket = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                     sidebracket.Grounded = False
 
@@ -724,11 +1790,13 @@ class Inventor:
                     pattern_axis = monoblock.CreateGeometryProxy(monoblock.Definition.WorkAxes[AXIS_Y])
                     self._create_circular_pattern(main_assy_def, [sidebracket], pattern_axis, SIDE_BRACKET_COUNT, SIDE_BRACKET_ANGLE)
                     
-                    print("End sidebracket")
+                    # print("End sidebracket")
+                    logger.info("End: Sidebracket")
 
                 elif item.get("component") == 'jacketnozzle_n16_shell':
                     # ---------------------------------------------------- First Jacket Nozzle at Top (Shell) Start ------------------------------------------
-                    print("First Jacket Nozzle at Top (Shell) Start")
+                    # print("First Jacket Nozzle at Top (Shell) Start")
+                    logger.info("Start: First Jacket Nozzle at Top (Shell)")
 
                     # Create angled work plane for N16 nozzle
                     shell_nozzle1_angled_plane = self._create_angled_plane(tg, main_assy_def, NOZZLE_N16_ANGLE, "N16_Plane")
@@ -990,12 +2058,14 @@ class Inventor:
                     cut_sketch_revolve_feature.RemoveParticipant(inner_shell)
                     cut_sketch_revolve_feature.RemoveParticipant(glass_9100)
 
-                    print("First Jacket Nozzle at Top (Shell) Finish")
+                    # print("First Jacket Nozzle at Top (Shell) Finish")
+                    logger.info("End: First Jacket Nozzle at Top (Shell)")
                     # ------------------------------ First Jacket Nozzle at Top (Shell) Finish ------------------------------------------------------------
 
 
                     # ------------------------------ Second Jacket Nozzle at Top (Shell) Start ------------------------------------------------------------
-                    print("Second Jacket Nozzle at Top (Shell) Start")
+                    # print("Second Jacket Nozzle at Top (Shell) Start")
+                    logger.info("Start: Second Jacket Nozzle at Top (Shell)")
 
                     # Create angled work plane for N15 nozzle
                     shell_nozzle2_angled_plane = self._create_angled_plane(tg, main_assy_def, NOZZLE_N15_ANGLE, "N15_Plane")
@@ -1185,13 +2255,15 @@ class Inventor:
                     cut_sketch_revolve_feature.RemoveParticipant(glass_9100)
 
 
-                    print("Second Jacket Nozzle at Top (Shell) Finish")
+                    # print("Second Jacket Nozzle at Top (Shell) Finish")
+                    logger.info("End: Second Jacket Nozzle at Top (Shell)")
                     # ------------------------------ Second Jacket Nozzle at Top (Shell) Finish ------------------------------------------------------------
 
                 elif item.get("component") == 'jacketnozzle_n17_btm':
+                    logger.info("Start: jacketnozzle_n17_btm")
                     # ------------------------------ Third Jacket Nozzle at Bottom Start ------------------------------------------------------------
-                    print("Third Jacket Nozzle at Bottom Start")
-
+                    logger.info("Start: Third Jacket Nozzle at Bottom")
+                    
                     # Create angled work plane for N11 nozzle
                     bottom_nozzle1_angled_plane = self._create_angled_plane(tg, main_assy_def, NOZZLE_N11_ANGLE, "N11_Plane")
 
@@ -1476,11 +2548,11 @@ class Inventor:
                     JKT_occ = self.find_occurrence_recursive(occurrences=main_assy_def.Occurrences, target_name="JKT-2100")
                     extrude.RemoveParticipant(JKT_occ)
 
-                    print("Third Jacket Nozzle at Bottom End")
+                    logger.info("End: Third Jacket Nozzle at Bottom")
                     # ------------------------------ Third Jacket Nozzle at Bottom End ------------------------------------------------------------
 
                     # ------------------------------ Forth Jacket Nozzle at Bottom Start ------------------------------------------------------------
-                    print("Forth Jacket Nozzle at Bottom Start")
+                    logger.info("Start: Forth Jacket Nozzle at Bottom")
 
                     # Create angled work plane for N17 nozzle
                     bottom_nozzle2_angled_plane = self._create_angled_plane(tg, main_assy_def, NOZZLE_N17_ANGLE, "N17_Plane")
@@ -1756,10 +2828,11 @@ class Inventor:
                     JKT_occ = self.find_occurrence_recursive(occurrences=main_assy_def.Occurrences, target_name="JKT-2100")
                     extrude.RemoveParticipant(JKT_occ)
 
-                    print("Forth Jacket Nozzle at Bottom End")
+                    logger.info("End: Forth Jacket Nozzle at Bottom")
+                    logger.info("End: jacketnozzle_n17_btm")
                 
                 elif item.get("component") == 'airvent_coupling_n11':
-                    print("Start MS COUPLING")
+                    logger.info("Start: airvent_coupling_n11 (MS COUPLING)")
                     JSR_MSS = self.find_occurrence_recursive(occurrences=main_assy_def.Occurrences, target_name="JSR-MSS-2100-10-00")
                     JSR_MSS_N13_Degree_plane = JSR_MSS.Definition.WorkPlanes["N13 DEGREE"]
                     JSR_MSS_N13_Degree_plane_proxy = JSR_MSS.CreateGeometryProxy(JSR_MSS_N13_Degree_plane)
@@ -1828,7 +2901,8 @@ class Inventor:
 
 
                     # MS COUPLING BOTTOM - Start
-                    print("Bottom MS COUPLING Start")
+                    # print("Bottom MS COUPLING Start")
+                    logger.info("Start: Bottom MS Coupling")
                     main_xz_plane = main_assy_def.WorkPlanes["XZ Plane"]
                     main_xy_plane = main_assy_def.WorkPlanes["XY Plane"]
                     ms_coupling_btm_sketch= main_assy_def.Sketches.Add(main_xz_plane)
@@ -1896,11 +2970,12 @@ class Inventor:
                     mate_ms_coupling_1 = main_assy_def.Constraints.AddMateConstraint(ms_coupling_xy_plan_proxy2, main_xy_plane, 0, 24833, 24833, None, None)
                     mate_ms_coupling_2 = main_assy_def.Constraints.AddMateConstraint(ms_coupling_xz_plan_proxy2, drain_mounting__plane_proxy, 0, 24833, 24833, None, None)
                     self.hide_workplanes_recursively(occurrence=ms_coupling2)
+                    logger.info("End: Bottom MS Coupling")
+                    logger.info("End: airvent_coupling_n11 (MS COUPLING)")
 
-                    print(JSR_MSS)
-
-                elif item.get("component") == 'n1_500_gasket_1':
-                    print("manhole_gasket_1 constraint start")
+                elif item.get("component") == 'n1_500_0_gasket_1':
+                    # print("manhole_gasket_1 constraint start")
+                    logger.info("Start: n1_500_0_gasket_1 (manhole_gasket_1)")
                     monoblock = self.find_occurrence_recursive(occurrences=main_assy_def.Occurrences, target_name="MBCE-06300-2020")
                     manhole_stump= self.find_occurrence_recursive(occurrences=monoblock.SubOccurrences, target_name="_MH_")
                     # manhole_stump = self.find_occurrence_by_keyword_recursive(occurrences=monoblock.SubOccurrences, target_keyword="3817-0018")
@@ -1919,9 +2994,11 @@ class Inventor:
                     manhole_gasket_mate_2 = main_assy_def.Constraints.AddMateConstraint(manhole_stump_xy_plane_proxy, manhole_gasket_1_xy_plane_proxy, 0, 24833, 24833, None, None)
                     manhole_gasket_flush_1 = main_assy_def.Constraints.AddFlushConstraint(manhole_stump_xz_plane_proxy, manhole_gasket_1_xz_plane_proxy, 0, None, None)
                     self.hide_workplanes_recursively(occurrence=manhole_gasket_1)
-                
-                elif item.get("component") == 'n1_500_manhole_protection_ring_1' or item.get("component") == 'n1_500_manhole_protection_ring':
-                    print("bush_type_protection_ring start")
+                    logger.info("End: n1_500_0_gasket_1 (manhole_gasket_1)")
+
+                elif item.get("component") == 'n1_500_0_manhole_protection_ring_1':
+                    # print("bush_type_protection_ring start")
+                    logger.info("Start: n1_500_0_manhole_protection_ring_1 (bush_type_protection_ring)")
                     # bush_type_protection_ring = self.find_occurrence_recursive(occurrences=main_assy_def.Occurrences, target_name="3616000548 01")
                     PTFE_envelop = self.find_occurrence_recursive(occurrences=manhole_gasket_1.SubOccurrences, target_name='DN500_605_521_8.9_ROUND ENVELOPE_MANHOLE:1')
                     gasket_ref_plane = PTFE_envelop.CreateGeometryProxy(PTFE_envelop.Definition.WorkPlanes["GASKET REF PLANE"])
@@ -1937,9 +3014,11 @@ class Inventor:
                     bush_type_protection_ring_gasket_mate_2 = main_assy_def.Constraints.AddMateConstraint(bush_type_protection_ring_xy_plane_proxy, manhole_gasket_1_xy_plane_proxy, 0, 24833, 24833, None, None)
                     bush_type_protection_ring_flush_1 = main_assy_def.Constraints.AddFlushConstraint(bush_type_protection_ring_xz_plane_proxy, gasket_ref_plane, "-30 mm ", None, None)
                     self.hide_workplanes_recursively(occurrence=bush_type_protection_ring)
-                
-                elif item.get("component") == 'n1_500_gasket_2':
-                    print("manhole_gasket_2 constraint start")
+                    logger.info("End: n1_500_0_manhole_protection_ring_1 (bush_type_protection_ring)")
+
+                elif item.get("component") == 'n1_500_0_gasket_2':
+                    # print("manhole_gasket_2 constraint start")
+                    logger.info("Start: n1_500_0_gasket_2 (manhole_gasket_2)")
                     monoblock = self.find_occurrence_recursive(occurrences=main_assy_def.Occurrences, target_name="MBCE-06300-2020")
                     manhole_stump= self.find_occurrence_recursive(occurrences=monoblock.SubOccurrences, target_name="_MH_")
                     # manhole_stump = self.find_occurrence_by_keyword_recursive(occurrences=monoblock.SubOccurrences, target_keyword="3817-0018")
@@ -1958,9 +3037,12 @@ class Inventor:
                     manhole_gasket_2_mate_2 = main_assy_def.Constraints.AddMateConstraint(manhole_stump_xy_plane_proxy, manhole_gasket_2_xy_plane_proxy, 0, 24833, 24833, None, None)
                     manhole_gasket_2_flush_1 = main_assy_def.Constraints.AddFlushConstraint(bush_type_protection_ring_xz_plane_proxy, manhole_gasket_2_xz_plane_proxy, 0, None, None)
                     self.hide_workplanes_recursively(occurrence=manhole_gasket_2)
+
+                    logger.info("End: n1_500_0_gasket_2 (manhole_gasket_2)")
                 
-                elif item.get("component") == 'n1_500_manhole_cover_1' or item.get("component") == 'n1_500_manhole_cover':
-                    print("manhole_cover start")
+                elif item.get("component") == 'n1_500_0_manhole_cover_1':
+                    # print("manhole_cover start")
+                    logger.info("Start: n1_500_0_manhole_cover_1 (manhole_cover)")
                     PTFE_envelop_2 = self.find_occurrence_recursive(occurrences=manhole_gasket_2.SubOccurrences, target_name='DN500_605_521_8.9_ROUND ENVELOPE_MANHOLE:1')
                     gasket_ref_plane_2 = PTFE_envelop_2.CreateGeometryProxy(PTFE_envelop_2.Definition.WorkPlanes["GASKET REF PLANE"])
 
@@ -1976,11 +3058,12 @@ class Inventor:
                     manhole_cover_mate_2 = main_assy_def.Constraints.AddFlushConstraint(manhole_stump_xy_plane_proxy, manhole_cover_xy_plane_proxy, 0, None, None)
                     manhole_cover_flush_1 = main_assy_def.Constraints.AddFlushConstraint(manhole_cover_xz_plane_proxy, gasket_ref_plane_2, 0, None, None)
                     self.hide_workplanes_recursively(occurrence=manhole_cover)
-                    print("manhole_cover end")
+                    logger.info("End: n1_500_0_manhole_cover_1 (manhole_cover)")
+                    # print("manhole_cover end")
                 
                 elif item.get("component") == 'mhcclamp':
-                    print("manhole_c_clamp start")
-
+                    # print("manhole_c_clamp start")
+                    logger.info("Start: mhcclamp (manhole_c_clamp)")
                     manhole_c_clamp = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                     manhole_c_clamp.Grounded = False
 
@@ -2131,11 +3214,13 @@ class Inventor:
                         AngleOffset=angle_offset_rad,           # 30 degrees between instances
                         Count=2                                # Total 2 clamps
                     )
-                    print("manhole_c_clamp end")
+                    logger.info("End: mhcclamp (manhole_c_clamp)")
+                    # print("manhole_c_clamp end")
 
-                elif item.get("component") == 'n1_500_gasket_3':
+                elif item.get("component") == 'n1_500_0_gasket_3':
 
-                    print("manhole_sight_glass_gasket start")
+                    # print("manhole_sight_glass_gasket start")
+                    logger.info("Start: n1_500_0_gasket_3 (manhole_sight_glass_gasket)")
 
                     manhole_sight_glass_gasket = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                     manhole_sight_glass_gasket.Grounded = False
@@ -2154,18 +3239,31 @@ class Inventor:
                     manhole_sight_glass_gasket_flush_1 = main_assy_def.Constraints.AddFlushConstraint(manhole_sight_glass_gasket_xy_axis_proxy, manhole_cover_xy_plane_proxy, 0, None, None)
                     manhole_sight_glass_gasket_flush_2 = main_assy_def.Constraints.AddFlushConstraint(manhole_sight_glass_gasket_xz_axis_proxy, top_part_xz_proxy, -4.15, None, None)
                     self.hide_workplanes_recursively(occurrence=manhole_sight_glass_gasket)
-                    print("manhole_sight_glass_gasket end")
+                    logger.info("End: n1_500_0_gasket_3 (manhole_sight_glass_gasket)")
+                    # print("manhole_sight_glass_gasket end")
 
                 elif item.get("component") == 'springbalanceassembly':
 
-                    print("Start: spring_balance_assembly")
+                    # print("Start: spring_balance_assembly")
+                    logger.info("Start: springbalanceassembly (spring_balance_assembly)")
+
+                    # Check if required components exist
+                    if manhole_cover is None or manhole_stump is None:
+                        logger.warning("Skipping spring balance assembly: manhole_cover or manhole_stump not found")
+                        print("Skipping spring_balance_assembly: manhole_cover or manhole_stump not available")
+                        continue
 
                     spring_balance_assembly = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                     spring_balance_assembly.Grounded = False
 
-                    hing = self.find_occurrence_by_keyword_recursive(occurrences=manhole_cover.SubOccurrences, target_keyword="38131000-1001") #38131000-1001                
+                    hing = self.find_occurrence_by_keyword_recursive(occurrences=manhole_cover.SubOccurrences, target_keyword="38131000-1001") #38131000-1001
+                    if hing is None:
+                        logger.warning("Skipping spring balance assembly constraints: hinge not found")
+                        print("End: spring_balance_assembly (hinge not found)")
+                        continue
+
                     hing_Spring_balance_Axis_proxy = hing.CreateGeometryProxy(hing.Definition.WorkAxes["Spring_balance_Axis"])
-                    
+
                     stump_yz_plane_proxy = manhole_stump.CreateGeometryProxy(manhole_stump.Definition.WorkPlanes["YZ Plane"])
                     spring_balance_assembly_axis_proxy = spring_balance_assembly.CreateGeometryProxy(spring_balance_assembly.Definition.WorkAxes["Spring_balance_Axis"])
                     spring_balance_assembly_xy_plane_proxy = spring_balance_assembly.CreateGeometryProxy(spring_balance_assembly.Definition.WorkPlanes["XY Plane"])
@@ -2176,10 +3274,12 @@ class Inventor:
                     spring_balance_assembly_angle_xy = main_assy_def.Constraints.AddAngleConstraint(manhole_cover_xy_plane_proxy, spring_balance_assembly_xy_plane_proxy, 0, 78593, None, None, None)
                     self.hide_workplanes_recursively(occurrence=spring_balance_assembly)
 
-                    print("End: spring_balance_assembly")
+                    # print("End: spring_balance_assembly")
+                    logger.info("End: springbalanceassembly (spring_balance_assembly)")
                 
-                elif item.get("component") == 'n1_500_toughened_glass_1':
-                    print("Start: manhole_sight_glass")
+                elif item.get("component") == 'n1_500_0_toughenedglass_1':
+                    # print("Start: manhole_sight_glass")
+                    logger.info("Start: n1_500_0_toughenedglass_1 (manhole_sight_glass)")
 
                     manhole_sight_glass = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                     manhole_sight_glass.Grounded = False
@@ -2196,11 +3296,13 @@ class Inventor:
                     manhole_sight_glass_mate1 = main_assy_def.Constraints.AddMateConstraint2(manhole_sight_glass_y_axis_proxy, manhole_cover_y_axis_proxy, 0, 24833, 24833, 115459, None, None)
                     manhole_sight_glass_mate2 = main_assy_def.Constraints.AddMateConstraint2(manhole_sight_glass_xz_plane_proxy, gasket_ref_plane, 0, 24833, 24833, 115459, None, None)
                     self.hide_workplanes_recursively(occurrence=manhole_sight_glass)
-                    print("End: manhole_sight_glass")
+                    
+                    logger.info("End: n1_500_0_toughenedglass_1 (manhole_sight_glass)")
+                    # print("End: manhole_sight_glass")
                 
-                elif item.get("component") == 'n1_500_sight/light_glass_flange_1':
-                    print("Start: manhole_sight_flange")
-
+                elif item.get("component") == 'n1_500_0_sight/light_glass_flange_1':
+                    # print("Start: manhole_sight_flange")
+                    logger.info("Start: n1_500_0_sight/light_glass_flange_1 (manhole_sight_flange)")
                     manhole_sight_flange = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                     manhole_sight_flange.Grounded = False
 
@@ -2217,10 +3319,12 @@ class Inventor:
                     # manhole_sight_glass_gasket_flush_1 = main_assy_def.Constraints.AddMateConstraint(manhole_cover_xy_plane_proxy, manhole_sight_flange_xy_plane_proxy, 0, None, None)
                     self.hide_workplanes_recursively(occurrence=manhole_sight_flange)
 
-                    print("End: manhole_sight_flange")
+                    logger.info("End: n1_500_0_sight/light_glass_flange_1 (manhole_sight_flange)")
+                    # print("End: manhole_sight_flange")
                 
-                elif item.get("component") == 'n1_500_washer_1':
-                        print("Start: manhole_washer")
+                elif item.get("component") == 'n1_500_0_washer_1':
+                        # print("Start: manhole_washer")
+                        logger.info("Start: n1_500_0_washer_1 (manhole_washer)")
                         comp = 'manhole_washer'
                         comp_splits = comp.split('_')
                         nozzle_name = comp_splits[0]
@@ -2237,9 +3341,11 @@ class Inventor:
                         manhole_washer_mate_1 = main_assy_def.Constraints.AddMateConstraint2(manhole_washer_y_axis_proxy, manhole_sight_flange_fastener_assly_axis_proxy, 0, 24833, 24833, 115459, None, None)
                         manhole_washer_mate_2 = main_assy_def.Constraints.AddMateConstraint(manhole_washer_fastner_assly_plane_proxy, manhole_sight_flange_xz_plane_proxy, 0, 24833, 24833, None, None)
                         self.hide_workplanes_recursively(occurrence=manhole_washer)
-                
-                elif item.get("component") == 'n1_500_bolt/stud_1':
-                        print("Start: manhole_fastener")
+                        logger.info("End: n1_500_0_washer_1 (manhole_washer)")
+
+                elif item.get("component") == 'n1_500_0_bolt/stud_1':
+                        # print("Start: manhole_fastener")
+                        logger.info("Start: n1_500_0_bolt/stud_1 (manhole_fastener)")
                         comp = 'manhole_fastener'
                         comp_splits = comp.split('_')
                         nozzle_name = comp_splits[0]
@@ -2272,9 +3378,11 @@ class Inventor:
                         )
 
                         self.hide_workplanes_recursively(occurrence=manhole_fastener)
-                
+                        logger.info("End: n1_500_0_bolt/stud_1 (manhole_fastener)")
+
                 elif item.get("component") == 'coc_gasket':
-                    print("Start: coc_gasket")
+                    # print("Start: coc_gasket")
+                    logger.info("Start: coc_gasket")
                     coc_gasket = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                     coc_gasket.Grounded = False
                     coc_gasket_y_axis_proxy = coc_gasket.CreateGeometryProxy(coc_gasket.Definition.WorkAxes["Y Axis"])
@@ -2290,10 +3398,14 @@ class Inventor:
                     coc_gasket_flush_1 = main_assy_def.Constraints.AddFlushConstraint(coc_gasket_xy_plane_proxy, coc_body_flange_xy_plane_proxy, 0, None, None)
                     coc_gasket_flush_2 = main_assy_def.Constraints.AddFlushConstraint(coc_gasket_xz_plane_proxy, coc_body_flange_xz_plane_proxy, 0, None, None)
                     self.hide_workplanes_recursively(occurrence=coc_gasket)
-                    print("End: coc_gasket")
+                    logger.info("End: coc_gasket")
+                    # print("End: coc_gasket")
 
                 elif item.get("component") == 'coc':
-                    print("Start: coc")
+                    logger.info(f"Start: {item.get("component")}")
+                    if coc_gasket is None:
+                        print("Warning: coc_gasket not found, skipping coc constraints")
+                        continue
                     coc = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                     coc.Grounded = False
                     coc_y_axis_proxy = coc.CreateGeometryProxy(coc.Definition.WorkAxes["Y Axis"])
@@ -2308,10 +3420,15 @@ class Inventor:
                     coc_mate2 = main_assy_def.Constraints.AddMateConstraint(coc_xy_plane_proxy, coc_gasket_xy_plane_proxy, 0, 24833, 24833, None, None)
                     coc_flush_2 = main_assy_def.Constraints.AddFlushConstraint(coc_xz_plane_proxy, coc_gasket_ref_plane, 0, None, None)
                     self.hide_workplanes_recursively(occurrence=coc)
-                    print("End: coc")
+
+                    logger.info(f"End: {item.get("component")}")
 
                 elif item.get("component") == 'bfcclamp':
-                    print("Start: coc_c_clamp")
+
+                    logger.info(f"Start: {item.get("component")} (coc_c_clamp)")
+                    if coc is None or coc_body_flange is None:
+                        print("Warning: coc or coc_body_flange not found, skipping bfcclamp constraints")
+                        continue
                     coc_c_clamp = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                     coc_c_clamp.Grounded = False
                     coc_c_clamp_xy_plane_proxy = coc_c_clamp.CreateGeometryProxy(coc_c_clamp.Definition.WorkPlanes["XY PLANE"])
@@ -2338,10 +3455,12 @@ class Inventor:
                         Count=24                                # Total 24 clamps
                     )
                     self.hide_workplanes_recursively(occurrence=coc_c_clamp)
-                    print("End: coc_c_clamp")
+
+                    logger.info(f"End: {item.get("component")} (coc_c_clamp)")
                 
-                elif item.get("component") == 'm_200_gasket_1' or item.get("component") == 'm_200_gasket':
-                    print("Start: center_nozzle_gasket")
+                elif item.get("component") == 'm_200_d_gasket_1' or item.get("component") == 'm_200_d_gasket':
+
+                    logger.info(f"Start: {item.get("component")} (center_nozzle_gasket)")
                     center_nozzle_gasket = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                     center_nozzle_gasket.Grounded = False
                     center_nozzle_gasket_y_axis_proxy = center_nozzle_gasket.CreateGeometryProxy(center_nozzle_gasket.Definition.WorkAxes["Y Axis"])
@@ -2357,10 +3476,12 @@ class Inventor:
                     center_nozzle_gasket_flush_1 = main_assy_def.Constraints.AddFlushConstraint(coc_stub_end_xy_plane_proxy, center_nozzle_gasket_xy_plane_proxy, 0, None, None)
                     center_nozzle_gasket_flush_2 = main_assy_def.Constraints.AddFlushConstraint(coc_stub_end_xz_plane_proxy, center_nozzle_gasket_xz_plane_proxy, 0, None, None)
                     self.hide_workplanes_recursively(occurrence=center_nozzle_gasket)
-                    print("End: center_nozzle_gasket")
+
+                    logger.info(f"End: {item.get("component")} (center_nozzle_gasket)")
 
                 elif item.get("component") == 'driveassembly':
-                    print("Start: drive_assembly")
+
+                    logger.info(f"Start: {item.get("component")}")
                     # DBR-500-01-00 R1_CE_5KL_6.3KL_STD
                     drive_assembly = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                     drive_assembly.Grounded = False
@@ -2377,10 +3498,12 @@ class Inventor:
                     drive_assembly_flush_1 = main_assy_def.Constraints.AddFlushConstraint(drive_assembly_xy_plane_proxy, main_xy_plane, 0, None, None)
                     drive_assembly_flush_2 = main_assy_def.Constraints.AddFlushConstraint(coc_stub_end_xz_plane_proxy, DBR_MOUNTING_PLANE_proxy, 2.1, None, None)
                     self.hide_workplanes_recursively(occurrence=drive_assembly)
-                    print("End: drive_assembly")
+
+                    logger.info(f"End: {item.get("component")}")
 
                 elif item.get("component") == 'shaftclosure':
-                    print("Start: mechanical_seal")
+
+                    logger.info(f"Start: {item.get("component")} (mechanical_seal)")
                     mechanical_seal = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                     mechanical_seal.Grounded = False
                     mechanical_seal_y_axis_proxy = mechanical_seal.CreateGeometryProxy(mechanical_seal.Definition.WorkAxes["Y Axis"])
@@ -2396,11 +3519,13 @@ class Inventor:
                     mechanical_seal_flush_1 = main_assy_def.Constraints.AddFlushConstraint(mechanical_seal_xz_plane_proxy, pad_plate_xz_plane_proxy, -5.3, None, None)
                     mechanical_seal_mate_2 = main_assy_def.Constraints.AddMateConstraint(mechanical_seal_xy_plane_proxy, main_xy_plane, 0, 24833, 24833, None, None)
                     self.hide_workplanes_recursively(occurrence=mechanical_seal)
-                    print("End: mechanical_seal")
+
+                    logger.info(f"End: {item.get("component")} (mechanical_seal)")
 
                 # Start: mechanical_seal_washer
                 elif item.get("component") == 'mechanical_seal_washer':
-                        print("Start: mechanical_seal_washer")
+
+                        logger.info(f"Start: {item.get("component")}")
                         comp = 'mechanical_seal_washer'
                         comp_splits = comp.split('_')
                         nozzle_name = comp_splits[0]
@@ -2417,11 +3542,14 @@ class Inventor:
                         mechanical_seal_washer_mate_1 = main_assy_def.Constraints.AddMateConstraint2(mechanical_seal_washer_y_axis_proxy, mechanical_seal_fastener_assly_axis_proxy, 0, 24833, 24833, 115459, None, None)
                         manhole_washer_mate_2 = main_assy_def.Constraints.AddMateConstraint(mechanical_seal_washer_xz_plane_proxy, mechanical_seal_fast_plane_proxy, 0.35, 24833, 24833, None, None)
                         self.hide_workplanes_recursively(occurrence=mechanical_seal_washer)
+
+                        logger.info(f"End: {item.get("component")}")
                 # End: mechanical_seal_washer
                 
                 # Start: mechanical_seal_fastener
                 elif item.get("component") == 'mechanical_seal_fastener':
-                        print("Start: mechanical_seal_fastener")
+
+                        logger.info(f"Start: {item.get("component")}")
                         comp = 'mechanical_seal_fastener'
                         comp_splits = comp.split('_')
                         nozzle_name = comp_splits[0]
@@ -2453,11 +3581,14 @@ class Inventor:
                             AngleOffset=angle,
                             Count=8
                         )
+
+                        logger.info(f"End: {item.get("component")}")
                 # End: mechanical_seal_fastener
 
                 # Start: Agitator
                 elif item.get("component") == 'agitator':
-                        print("Start: agitator")
+
+                        logger.info(f"Start: {item.get("component")}")
                         agitator = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                         agitator.Grounded = False
                         agitator_y_axis_proxy = agitator.CreateGeometryProxy(agitator.Definition.WorkAxes["Y Axis"])
@@ -2474,17 +3605,25 @@ class Inventor:
                         agitator_flush_1 = main_assy_def.Constraints.AddFlushConstraint(main_xy_plane, agitator_xy_plane_proxy, 0, None, None)
                         agitator_flush_2 = main_assy_def.Constraints.AddFlushConstraint(DBR_MOUNTING_PLANE_proxy, pre_machine_connected_head_xz_plane_proxy, 54.5, None, None)
                         self.hide_workplanes_recursively(occurrence=agitator)
-                        print("End: agitator")
+
+                        logger.info(f"End: {item.get("component")}")
                 # End: Agitator
 
                 # Start: Nozzle 2
-                elif item.get("component") == 'n2_150_split_flange_1' or item.get("component") == 'n2_150_split_flange':
-                        comp = 'n2_150_60_split_flange'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2] # math.degrees(math.acos(0.5))
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n2_150_60_split_flange_1' or item.get("component").startswith('n2_') and 'split_flange' in item.get("component", ""):
+                        # Parse component name to extract degree dynamically
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name = parsed['nozzle']
+                            nozzle_size = parsed['size']
+                            nozzle_deg = parsed['degree']
+                            fitting = parsed['fitting']
+                        else:
+                            # Fallback for old format without degree
+                            nozzle_name = 'n2'
+                            nozzle_size = '150'
+                            nozzle_deg = '60'
+                            fitting = 'split_flange'
 
                         swagged_dish = self.find_occurrence_recursive(occurrences=main_assy_def.Occurrences, target_name="CT-1950")
                         
@@ -2494,11 +3633,9 @@ class Inventor:
                         # n2_axis = self.get_work_axis(work_axes=swagged_dish.Definition.WorkAxes, axis_name="N2")
                         # n2_plane = self.get_work_plane(work_planes=swagged_dish.Definition.WorkPlanes, plane_name="N2")
 
-                        print(n2_plane.Name)
-                        print(n2_axis.Name)
                         if n2_axis is not None and n2_plane is not None:
                             self._used_nozzle_planes.append(n2_plane.Name)  # Mark plane as used
-                            print("Start: n2_150_60_split_flange")
+                            logger.info(f"Start: {item.get("component")}")
 
                             n2_150_60_split_flange = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n2_150_60_split_flange.Grounded = False
@@ -2534,18 +3671,25 @@ class Inventor:
                             n2_150_60_split_flange_flush_1 = main_assy_def.Constraints.AddFlushConstraint(swagged_dish_n2_plane_proxy, n2_150_60_split_flange_xy_plane_proxy, 0, None, None)
                             n2_150_60_split_flange_flush_2 = main_assy_def.Constraints.AddFlushConstraint(monoblock_nozzle_size_plane_pg, n2_150_60_split_flange_top_face_plane_proxy, -2.0, None, None)
                             self.hide_workplanes_recursively(occurrence=n2_150_60_split_flange)
-                            print("End: n2_150_60_split_flange")
+                            logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n2_150_gasket_1' or item.get("component") == 'n2_150_gasket':
-                        comp = 'n2_150_60_gasket'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n2_150_60_gasket_1' or item.get("component").startswith('n2_') and 'gasket' in item.get("component", ""):
+                        # Parse component name to extract degree dynamically
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name = parsed['nozzle']
+                            nozzle_size = parsed['size']
+                            nozzle_deg = parsed['degree']
+                            fitting = parsed['fitting']
+                        else:
+                            nozzle_name = 'n2'
+                            nozzle_size = '150'
+                            nozzle_deg = '60'
+                            fitting = 'gasket'
 
                         if n2_axis is not None and n2_plane is not None:
-                            print("Start: n2_150_60_gasket")
+                            logger.info(f"Start: {item.get("component")}")
+
                             n2_150_60_gasket = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n2_150_60_gasket.Grounded = False
 
@@ -2560,18 +3704,24 @@ class Inventor:
                             n2_150_60_gasket_flush_1 = main_assy_def.Constraints.AddFlushConstraint(swagged_dish_n2_plane_proxy, n2_150_60_gasket_xy_plane_proxy, 0, None, None)
                             n2_150_60_gasket_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n2_150_60_split_flange_top_face_plane_proxy, n2_150_60_gasket_xz_plane_proxy, 2.2, None, None)
 
-                            print("End: n2_150_60_gasket")
+                            logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n2_150_blind_cover_1' or item.get("component") == 'n2_150_blind_cover':
-                        comp = 'n2_150_60_blind_cover'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n2_150_60_blind_cover_1' or item.get("component").startswith('n2_') and 'blind_cover' in item.get("component", ""):
+                        # Parse component name to extract degree dynamically
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name = parsed['nozzle']
+                            nozzle_size = parsed['size']
+                            nozzle_deg = parsed['degree']
+                            fitting = parsed['fitting']
+                        else:
+                            nozzle_name = 'n2'
+                            nozzle_size = '150'
+                            nozzle_deg = '60'
+                            fitting = 'blind_cover'
 
                         if n2_axis is not None and n2_plane is not None:
-                            print("Start: n2_150_60_blind_cover")
+                            logger.info(f"Start: {item.get("component")}")
                             n2_150_60_blind_cover = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n2_150_60_blind_cover.Grounded = False
 
@@ -2584,18 +3734,24 @@ class Inventor:
                             n2_150_60_blind_cover_angle = main_assy_def.Constraints.AddAngleConstraint(n2_150_60_split_flange_xy_plane_proxy, n2_150_60_blind_cover_xy_plane_proxy, '22.5 deg', 78593, None, None, None)
                             n2_150_60_blind_cover_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n2_150_60_gasket_ref_plane, n2_150_60_blind_cover_xz_plane_proxy, 0, None, None)
 
-                            print("End: n2_150_60_blind_cover")
+                            logger.info(f"End: {item.get("component")}")
                 
-                elif item.get("component") == 'n2_150_bolt/stud':
-                        comp = 'n2_150_60_fastener'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n2_150_60_bolt/stud' or item.get("component").startswith('n2_') and ('bolt' in item.get("component", "") or 'stud' in item.get("component", "")):
+                        # Parse component name to extract degree dynamically
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name = parsed['nozzle']
+                            nozzle_size = parsed['size']
+                            nozzle_deg = parsed['degree']
+                            fitting = parsed['fitting']
+                        else:
+                            nozzle_name = 'n2'
+                            nozzle_size = '150'
+                            nozzle_deg = '60'
+                            fitting = 'fastener'
 
                         if n2_axis is not None and n2_plane is not None:
-                            print("Start: n2_150_60_fastener")
+                            logger.info(f"Start: {item.get("component")}")
                             n2_150_60_fastener = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n2_150_60_fastener.Grounded = False
 
@@ -2606,20 +3762,24 @@ class Inventor:
                             n2_150_60_fastener_mate_1 = main_assy_def.Constraints.AddMateConstraint2(n2_150_60_fastener_y_axis_proxy, n2_150_60_split_flange_fastener_assly_axis_proxy, 0, 24833, 24833, 115459, None, None)
                             n2_150_60_fastener_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n2_150_60_fastener_xz_plane_proxy, n2_150_60_blind_cover_xz_plane_proxy, -1.8, None, None)
                             n2_150_60_fastener_angle = main_assy_def.Constraints.AddAngleConstraint(n2_150_60_fastener_xy_plane_proxy, n2_150_60_blind_cover_xy_plane_proxy, 0, 78593, None, None, None)
-
-                            print("End: n2_150_60_fastener")
+                            logger.info(f"End: {item.get("component")}")
                 
-                elif item.get("component") == 'n2_150_washer':
-                        comp = 'n2_150_60_washer'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n2_150_60_washer' or item.get("component").startswith('n2_') and 'washer' in item.get("component", ""):
+                        # Parse component name to extract degree dynamically
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name = parsed['nozzle']
+                            nozzle_size = parsed['size']
+                            nozzle_deg = parsed['degree']
+                            fitting = parsed['fitting']
+                        else:
+                            nozzle_name = 'n2'
+                            nozzle_size = '150'
+                            nozzle_deg = '60'
+                            fitting = 'washer'
 
                         if n2_axis is not None and n2_plane is not None:
-                            print("Start: n2_150_60_washer")
-                            
+                            logger.info(f"Start: {item.get("component")}")
                             n2_150_60_washer = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n2_150_60_washer.Grounded = False
 
@@ -2633,19 +3793,24 @@ class Inventor:
                             n2_150_60_washer_mate_2 = main_assy_def.Constraints.AddMateConstraint(n2_150_60_washer_xz_plane_proxy, n2_150_60_split_flange_top_face_plane_proxy, -2.2, 24833, 24833, None, None)
                             n2_150_60_washer_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n2_150_60_washer_xy_plane_proxy, n2_150_60_fastener_xy_plane_proxy, 0, None, None)
 
-                            print("End: n2_150_60_washer")
+                            logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n2_150_nut':
-                        comp = 'n2_150_60_nut'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n2_150_60_nut' or item.get("component").startswith('n2_') and 'nut' in item.get("component", ""):
+                        # Parse component name to extract degree dynamically
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name = parsed['nozzle']
+                            nozzle_size = parsed['size']
+                            nozzle_deg = parsed['degree']
+                            fitting = parsed['fitting']
+                        else:
+                            nozzle_name = 'n2'
+                            nozzle_size = '150'
+                            nozzle_deg = '60'
+                            fitting = 'nut'
 
                         if n2_axis is not None and n2_plane is not None:
-                            print("Start: n2_150_60_nut")
-
+                            logger.info(f"Start: {item.get("component")}")
                             n2_150_60_nut = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n2_150_60_nut.Grounded = False
 
@@ -2672,17 +3837,24 @@ class Inventor:
                                 AngleOffset=angle,
                                 Count=8
                             )
-                            print("End: n2_150_60_nut")
+
+                            logger.info(f"End: {item.get("component")}")
                 # End: Nozzle 2
                 
                 # Start: Nozzle 3
-                elif item.get("component") == 'n3_150_split_flange_1' or item.get("component") == 'n3_150_split_flange':
-                        comp = 'n3_150_95_split_flange'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n3_150_95_split_flange_1' or item.get("component").startswith('n3_') and 'split_flange' in item.get("component", ""):
+                        # Parse component name to extract degree dynamically
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name = parsed['nozzle']
+                            nozzle_size = parsed['size']
+                            nozzle_deg = parsed['degree']
+                            fitting = parsed['fitting']
+                        else:
+                            nozzle_name = 'n3'
+                            nozzle_size = '150'
+                            nozzle_deg = '95'
+                            fitting = 'split_flange'
 
                         swagged_dish = self.find_occurrence_recursive(occurrences=main_assy_def.Occurrences, target_name="CT-1950")
 
@@ -2692,11 +3864,9 @@ class Inventor:
                         # n3_axis = self.get_work_axis(work_axes=swagged_dish.Definition.WorkAxes, axis_name="N3")
                         # n3_plane = self.get_work_plane(work_planes=swagged_dish.Definition.WorkPlanes, plane_name="N3")
 
-                        print(n3_plane.Name)
-                        print(n3_axis.Name)
                         if n3_axis is not None and n3_plane is not None:
                             self._used_nozzle_planes.append(n3_plane.Name)  # Mark plane as used
-                            print("Start: n3_150_95_split_flange")
+                            logger.info(f"Start: {item.get("component")}")
                             n3_150_95_split_flange = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n3_150_95_split_flange.Grounded = False
                             n3_150_95_split_flange_y_axis_proxy = n3_150_95_split_flange.CreateGeometryProxy(n3_150_95_split_flange.Definition.WorkAxes["Y Axis"])
@@ -2730,18 +3900,18 @@ class Inventor:
                             n3_150_95_split_flange_flush_1 = main_assy_def.Constraints.AddFlushConstraint(swagged_dish_n3_plane_proxy, n3_150_95_split_flange_xy_plane_proxy, 0, None, None)
                             n3_150_95_split_flange_flush_2 = main_assy_def.Constraints.AddFlushConstraint(monoblock_nozzle_size_plane_pg, n3_150_95_split_flange_top_face_plane_proxy, -2.0, None, None)
 
-                            print("End: n3_150_95_split_flange")
+                            logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n3_150_gasket_1' or item.get("component") == 'n3_150_gasket':
-                        comp = 'n3_150_95_gasket'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n3_150_95_gasket_1' or item.get("component").startswith('n3_') and 'gasket' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n3', '150', '95', 'gasket'
 
                         if n3_axis is not None and n3_plane is not None:
-                            print("Start: n3_150_95_gasket")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n3_150_95_gasket = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n3_150_95_gasket.Grounded = False
 
@@ -2756,18 +3926,18 @@ class Inventor:
                             n3_150_95_gasket_flush_1 = main_assy_def.Constraints.AddFlushConstraint(swagged_dish_n3_plane_proxy, n3_150_95_gasket_xy_plane_proxy, 0, None, None)
                             n3_150_95_gasket_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n3_150_95_split_flange_top_face_plane_proxy, n3_150_95_gasket_xz_plane_proxy, 2.2, None, None)
 
-                            print("End: n3_150_95_gasket")
+                            logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n3_150_blind_cover_1' or item.get("component") == 'n3_150_blind_cover':
-                        comp = 'n3_150_95_blind_cover'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n3_150_95_blind_cover_1' or item.get("component").startswith('n3_') and 'blind_cover' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n3', '150', '95', 'blind_cover'
 
                         if n3_axis is not None and n3_plane is not None:
-                            print("Start: n3_150_95_blind_cover")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n3_150_95_blind_cover = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n3_150_95_blind_cover.Grounded = False
 
@@ -2780,18 +3950,17 @@ class Inventor:
                             n3_150_95_blind_cover_angle = main_assy_def.Constraints.AddAngleConstraint(n3_150_95_split_flange_xy_plane_proxy, n3_150_95_blind_cover_xy_plane_proxy, '22.5 deg', 78593, None, None, None)
                             n3_150_95_blind_cover_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n3_150_95_gasket_ref_plane, n3_150_95_blind_cover_xz_plane_proxy, 0, None, None)
 
-                            print("End: n3_150_95_blind_cover")
+                            logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n3_150_bolt/stud':
-                        comp = 'n3_150_95_fastener'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n3_150_95_bolt/stud' or item.get("component").startswith('n3_') and ('bolt' in item.get("component", "") or 'stud' in item.get("component", "")):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n3', '150', '95', 'fastener'
 
                         if n3_axis is not None and n3_plane is not None:
-                            print("Start: n3_150_95_fastener")
+                            logger.info(f"Start: {item.get("component")}")
                             n3_150_95_fastener = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n3_150_95_fastener.Grounded = False
 
@@ -2802,18 +3971,19 @@ class Inventor:
                             n3_150_95_fastener_mate_1 = main_assy_def.Constraints.AddMateConstraint2(n3_150_95_fastener_y_axis_proxy, n3_150_95_split_flange_fastener_assly_axis_proxy, 0, 24833, 24833, 115459, None, None)
                             n3_150_95_fastener_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n3_150_95_fastener_xz_plane_proxy, n3_150_95_blind_cover_xz_plane_proxy, -1.8, None, None)
                             n3_150_95_fastener_angle = main_assy_def.Constraints.AddAngleConstraint(n3_150_95_fastener_xy_plane_proxy, n3_150_95_blind_cover_xy_plane_proxy, 0, 78593, None, None, None)
-                            print("End: n3_150_95_fastener")
 
-                elif item.get("component") == 'n3_150_washer':
-                        comp = 'n3_150_95_washer'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                            logger.info(f"End: {item.get("component")}")
+
+                elif item.get("component") == 'n3_150_95_washer' or item.get("component").startswith('n3_') and 'washer' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n3', '150', '95', 'washer'
 
                         if n3_axis is not None and n3_plane is not None:
-                            print("Start: n3_150_95_washer")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n3_150_95_washer = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n3_150_95_washer.Grounded = False
 
@@ -2826,18 +3996,19 @@ class Inventor:
                             # n6_150_60_washer_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_washer_xz_plane_proxy, n6_150_180_split_flange_xz_plane_proxy, 0, None, None)
                             n3_150_95_washer_mate_2 = main_assy_def.Constraints.AddMateConstraint(n3_150_95_washer_xz_plane_proxy, n3_150_95_split_flange_top_face_plane_proxy, -2.2, 24833, 24833, None, None)
                             n3_150_95_washer_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n3_150_95_washer_xy_plane_proxy, n3_150_95_fastener_xy_plane_proxy, 0, None, None)
-                            print("End: n3_150_95_washer")
 
-                elif item.get("component") == 'n3_150_nut':
-                        comp = 'n3_150_95_nut'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                            logger.info(f"End: {item.get("component")}")
+
+                elif item.get("component") == 'n3_150_95_nut' or item.get("component").startswith('n3_') and 'nut' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n3', '150', '95', 'nut'
 
                         if n3_axis is not None and n3_plane is not None:
-                            print("Start: n3_150_95_nut")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n3_150_95_nut = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n3_150_95_nut.Grounded = False
 
@@ -2864,18 +4035,17 @@ class Inventor:
                                 AngleOffset=angle,
                                 Count=8
                             )
-                            print("End: n3_150_95_nut")
+
+                            logger.info(f"End: {item.get("component")}")
                 # End: Nozzle 3
                 
                 # Start: Nozzle 5
-                elif item.get("component") == 'n5_250_split_flange_1' or item.get("component") == 'n5_250_split_flange' or item.get("component") == 'n5_150_split_flange_1' or item.get("component") == 'n5_150_split_flange':
-                        
-                        comp = 'n5_250_135_split_flange'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n5_250_135_split_flange_1' or item.get("component").startswith('n5_') and 'split_flange' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n5', '250', '135', 'split_flange'
 
 
                         swagged_dish = self.find_occurrence_recursive(occurrences=main_assy_def.Occurrences, target_name="CT-1950")
@@ -2886,11 +4056,9 @@ class Inventor:
                         # n5_axis = self.get_work_axis(work_axes=swagged_dish.Definition.WorkAxes, axis_name="N5")
                         # n5_plane = self.get_work_plane(work_planes=swagged_dish.Definition.WorkPlanes, plane_name="N5")
 
-                        print(n5_plane.Name)
-                        print(n5_axis.Name)
                         if n5_axis is not None and n5_plane is not None:
                             self._used_nozzle_planes.append(n5_plane.Name)  # Mark plane as used
-                            print("Start: n5_250_135_split_flange")
+                            logger.info(f"Start: {item.get("component")}")
                             n5_250_135_split_flange = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n5_250_135_split_flange.Grounded = False
 
@@ -2930,18 +4098,18 @@ class Inventor:
                             n5_250_135_split_flange_flush_1 = main_assy_def.Constraints.AddFlushConstraint(swagged_dish_n5_plane_proxy, n5_250_135_split_flange_xy_plane_proxy, 0, None, None)
                             n5_250_135_split_flange_flush_2 = main_assy_def.Constraints.AddFlushConstraint(monoblock_nozzle_size_plane_pg, n5_250_135_split_flange_top_face_plane_proxy, -2.0, None, None)
 
-                            print("End: n5_250_135_split_flange")
+                            logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n5_250_gasket_1' or item.get("component") == 'n5_250_gasket' or item.get("component") == 'n5_150_gasket_1' or item.get("component") == 'n5_150_gasket':
-                        comp = 'n5_250_135_gasket'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n5_250_135_gasket_1' or item.get("component").startswith('n5_') and 'gasket' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n5', '250', '135', 'gasket'
 
                         if n5_axis is not None and n5_plane is not None:
-                            print("Start: n5_250_135_gasket")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n5_250_135_gasket = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n5_250_135_gasket.Grounded = False
 
@@ -2956,18 +4124,18 @@ class Inventor:
                             n5_250_135_gasket_flush_1 = main_assy_def.Constraints.AddFlushConstraint(swagged_dish_n5_plane_proxy, n5_250_135_gasket_xy_plane_proxy, 0, None, None)
                             n5_250_135_gasket_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n5_250_135_split_flange_top_face_plane_proxy, n5_250_135_gasket_xz_plane_proxy, 2.2, None, None)
 
-                            print("End: n5_250_135_gasket")
+                            logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n5_250_baffle_1' or item.get("component") == 'n5_250_baffle' or item.get("component") == 'n5_150_baffle_1' or item.get("component") == 'n5_150_baffle':
-                        comp = 'n5_250_135_baffle'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n5_250_135_baffle_1' or item.get("component").startswith('n5_') and 'baffle' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n5', '250', '135', 'baffle'
 
                         if n5_axis is not None and n5_plane is not None:
-                            print("Start: n5_250_135_baffle")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n5_250_135_baffle = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n5_250_135_baffle.Grounded = False
 
@@ -2979,18 +4147,17 @@ class Inventor:
                             n5_250_135_baffle_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n5_250_135_split_flange_xy_plane_proxy, n5_250_135_baffle_xy_plane_proxy, 0, None, None)
                             n5_250_135_baffle_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n5_250_135_gasket_ref_plane, n5_250_135_baffle_xz_plane_proxy, 0, None, None)
 
-                            print("End: n5_250_135_baffle")
+                            logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n5_250_bolt/stud_1' or item.get("component") == 'n5_250_bolt/stud' or item.get("component") == 'n5_150_bolt/stud_1' or item.get("component") == 'n5_150_bolt/stud':
-                        comp = 'n5_250_135_fastener'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n5_250_135_bolt/stud' or item.get("component").startswith('n5_') and ('bolt' in item.get("component", "") or 'stud' in item.get("component", "")):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n5', '250', '135', 'fastener'
 
                         if n5_axis is not None and n5_plane is not None:
-                            print("Start: n5_250_135_fastener")
+                            logger.info(f"Start: {item.get("component")}")
                             n5_250_135_fastener = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n5_250_135_fastener.Grounded = False
 
@@ -3001,18 +4168,18 @@ class Inventor:
                             n5_250_135_fastener_mate_1 = main_assy_def.Constraints.AddMateConstraint2(n5_250_135_fastener_y_axis_proxy, n5_250_135_split_flange_fastener_assly_axis_proxy, 0, 24833, 24833, 115459, None, None)
                             n5_250_135_fastener_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n5_250_135_fastener_xz_plane_proxy, n5_250_135_baffle_xz_plane_proxy, -2.8, None, None)
                             n5_250_135_fastener_angle = main_assy_def.Constraints.AddAngleConstraint(n5_250_135_fastener_xy_plane_proxy, n5_250_135_baffle_xy_plane_proxy, 0, 78593, None, None, None)
-                            print("End: n5_250_135_fastener")
 
-                elif item.get("component") == 'n5_250_washer_1' or item.get("component") == 'n5_250_washer' or item.get("component") == 'n5_150_washer_1' or item.get("component") == 'n5_150_washer':
-                        comp = 'n5_250_135_washer'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                            logger.info(f"End: {item.get("component")}")
+
+                elif item.get("component") == 'n5_250_135_washer' or item.get("component").startswith('n5_') and 'washer' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n5', '250', '135', 'washer'
 
                         if n5_axis is not None and n5_plane is not None:
-                            print("Start: n5_250_135_washer")
+                            logger.info(f"Start: {item.get("component")}")
                             n5_250_135_washer = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n5_250_135_washer.Grounded = False
 
@@ -3025,18 +4192,19 @@ class Inventor:
                             # n6_150_60_washer_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_washer_xz_plane_proxy, n6_150_180_split_flange_xz_plane_proxy, 0, None, None)
                             n5_250_135_washer_mate_2 = main_assy_def.Constraints.AddMateConstraint(n5_250_135_washer_xz_plane_proxy, n5_250_135_split_flange_top_face_plane_proxy, -2.2, 24833, 24833, None, None)
                             n5_250_135_washer_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n5_250_135_washer_xy_plane_proxy, n5_250_135_fastener_xy_plane_proxy, 0, None, None)
-                            print("End: n5_250_135_washer")
 
-                elif item.get("component") == 'n5_250_nut_1' or item.get("component") == 'n5_250_nut' or item.get("component") == 'n5_150_nut_1' or item.get("component") == 'n5_150_nut':
-                        comp = 'n5_250_135_nut'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                            logger.info(f"End: {item.get("component")}")
+
+                elif item.get("component") == 'n5_250_135_nut' or item.get("component").startswith('n5_') and 'nut' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n5', '250', '135', 'nut'
 
                         if n5_axis is not None and n5_plane is not None:
-                            print("Start: n5_250_135_nut")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n5_250_135_nut = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n5_250_135_nut.Grounded = False
 
@@ -3066,17 +4234,17 @@ class Inventor:
                                 AngleOffset=angle,
                                 Count=12
                             )
-                            print("End: n5_250_135_nut")
+
+                            logger.info(f"End: {item.get("component")}")
                 # End: Nozzle 5
                 
                 # Start: Nozzle 6
-                elif item.get("component") == 'n6_150_split_flange_1' or item.get("component") == 'n6_150_split_flange':
-                        comp = 'n6_150_180_split_flange'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n6_150_180_split_flange_1' or item.get("component").startswith('n6_') and 'split_flange' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n6', '150', '180', 'split_flange'
 
                         swagged_dish = self.find_occurrence_recursive(occurrences=main_assy_def.Occurrences, target_name="CT-1950")
                         n6_plane = self.get_workplanes_by_degrees(work_planes=swagged_dish.Definition.WorkPlanes, target=nozzle_deg, tolerance=2.0)
@@ -3084,12 +4252,11 @@ class Inventor:
                         
                         # n6_axis = self.get_work_axis(work_axes=swagged_dish.Definition.WorkAxes, axis_name="N6")
                         # n6_plane = self.get_work_plane(work_planes=swagged_dish.Definition.WorkPlanes, plane_name="N6")
-                        
-                        print(n6_plane.Name)
-                        print(n6_axis.Name)
+
                         if n6_axis is not None and n6_plane is not None:
                             self._used_nozzle_planes.append(n6_plane.Name)  # Mark plane as used
-                            print("Start: n6_150_180_split_flange")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n6_150_180_split_flange = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n6_150_180_split_flange.Grounded = False
                             n6_150_180_split_flange_y_axis_proxy = n6_150_180_split_flange.CreateGeometryProxy(n6_150_180_split_flange.Definition.WorkAxes["Y Axis"])
@@ -3126,18 +4293,18 @@ class Inventor:
                             n6_150_180_split_flange_flush_1 = main_assy_def.Constraints.AddFlushConstraint(swagged_dish_n6_plane_proxy, n6_150_180_split_flange_xy_plane_proxy, 0, None, None)
                             n6_150_180_split_flange_flush_2 = main_assy_def.Constraints.AddFlushConstraint(monoblock_nozzle_size_plane_pg, n6_150_180_split_flange_top_face_plane_proxy, -2.0, None, None)
 
-                            print("End: n6_150_180_split_flange")
+                            logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n6_150_gasket_1' or item.get("component") == 'n6_150_gasket':
-                        comp = 'n6_150_180_gasket'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n6_150_180_gasket_1' or item.get("component").startswith('n6_') and 'gasket' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n6', '150', '180', 'gasket'
 
                         if n6_axis is not None and n6_plane is not None:
-                            print("Start: n6_150_180_gasket")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n6_150_180_gasket = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n6_150_180_gasket.Grounded = False
 
@@ -3152,18 +4319,18 @@ class Inventor:
                             n3_150_95_gasket_flush_1 = main_assy_def.Constraints.AddFlushConstraint(swagged_dish_n6_plane_proxy, n6_150_180_gasket_xy_plane_proxy, 0, None, None)
                             n3_150_95_gasket_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_split_flange_top_face_plane_proxy, n6_150_180_gasket_xz_plane_proxy, 2.0, None, None)
 
-                            print("End: n6_150_180_gasket")
+                            logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n6_150_toughened_glass_1' or item.get("component") == 'n6_150_toughened_glass':
-                        comp = 'n6_150_180_toughenedglass'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n6_150_180_toughened_glass_1' or item.get("component").startswith('n6_') and 'toughened_glass' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n6', '150', '180', 'toughenedglass'
                         
                         if n6_axis is not None and n6_plane is not None:
-                            print("Start: n6_150_180_toughenedglass")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n6_150_180_toughenedglass = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n6_150_180_toughenedglass.Grounded = False
 
@@ -3176,18 +4343,18 @@ class Inventor:
                             n6_150_180_toughenedglass_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_gasket_xy_plane_proxy, n6_150_180_toughenedglass_xy_plane_proxy, 0, None, None)
                             n6_150_180_toughenedglass_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_gasket_ref_plane, n6_150_180_toughenedglass_xz_plane_proxy, 2.0, None, None)
 
-                            print("End: n6_150_180_toughenedglass")
+                            logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n6_150_sight/light_glass_flange_1' or item.get("component") == 'n6_150_sight/light_glass_flange':
-                        comp = 'n6_150_180_lightglass'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n6_150_180_sight/light_glass_flange_1' or item.get("component").startswith('n6_') and ('sight' in item.get("component", "") or 'light_glass' in item.get("component", "")):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n6', '150', '180', 'lightglass'
 
                         if n6_axis is not None and n6_plane is not None:
-                            print("Start: n6_150_180_lightglass")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n6_150_180_lightglass = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n6_150_180_lightglass.Grounded = False
 
@@ -3200,18 +4367,18 @@ class Inventor:
                             n6_150_180_blind_cover_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_split_flange_xy_plane_proxy, n6_150_180_lightglass_xy_plane_proxy, 0, None, None)
                             n6_150_180_blind_cover_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_toughenedglass_xz_plane_proxy, n6_150_180_lightglass_assembly_plane_proxy, 0.3, None, None)
 
-                            print("End: n6_150_180_lightglass")
+                            logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n6_150_bolt/stud_1' or item.get("component") == 'n6_150_bolt/stud':
-                        comp = 'n6_150_180_fastener'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n6_150_180_bolt/stud' or item.get("component").startswith('n6_') and ('bolt' in item.get("component", "") or 'stud' in item.get("component", "")):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n6', '150', '180', 'fastener'
 
                         if n6_axis is not None and n6_plane is not None:
-                            print("Start: n6_150_180_fastener")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n6_150_180_fastener = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n6_150_180_fastener.Grounded = False
 
@@ -3222,18 +4389,18 @@ class Inventor:
                             n6_150_60_fastener_mate_1 = main_assy_def.Constraints.AddMateConstraint2(n6_150_180_fastener_y_axis_proxy, n6_150_180_split_flange_fastner_axis_proxy, 0, 24833, 24833, 115459, None, None)
                             n6_150_60_fastener_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_fastener_xz_plane_proxy, n6_150_180_lightglass_xz_plane_proxy, 0, None, None)
                             n6_150_60_fastener_angle = main_assy_def.Constraints.AddAngleConstraint(n6_150_180_fastener_xy_plane_proxy, n6_150_180_lightglass_xy_plane_proxy, 0, 78593, None, None, None)
-                            print("End: n6_150_180_fastener")
+
+                            logger.info(f"End: {item.get("component")}")
                 
-                elif item.get("component") == 'n6_150_washer_1' or item.get("component") == 'n6_150_washer':
-                        comp = 'n6_150_180_washer'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n6_150_180_washer' or item.get("component").startswith('n6_') and 'washer' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n6', '150', '180', 'washer'
 
                         if n6_axis is not None and n6_plane is not None:
-                            print("Start: n6_150_180_washer")
+                            logger.info(f"Start: {item.get("component")}")
                             n6_150_180_washer = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n6_150_180_washer.Grounded = False
 
@@ -3248,19 +4415,19 @@ class Inventor:
                             # n6_150_60_washer_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_washer_xz_plane_proxy, n6_150_180_split_flange_xz_plane_proxy, 0, None, None)
                             n6_150_60_washer_mate_2 = main_assy_def.Constraints.AddMateConstraint(n6_150_180_washer_xz_plane_proxy, n6_150_180_split_flange_top_face_plane_proxy, -2.2, 24833, 24833, None, None)
                             n6_150_60_washer_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_washer_xy_plane_proxy, n6_150_180_fastener_xy_plane_proxy, 0, None, None)
-                            print("End: n6_150_180_washer")
 
-                elif item.get("component") == 'n6_150_nut_1' or item.get("component") == 'n6_150_nut':
-                        
-                        comp = 'n6_150_60_nut'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                            logger.info(f"End: {item.get("component")}")
+
+                elif item.get("component") == 'n6_150_180_nut' or item.get("component").startswith('n6_') and 'nut' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n6', '150', '180', 'nut'
 
                         if n6_axis is not None and n6_plane is not None:
-                            print("Start: n6_150_60_nut")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n6_150_180_nut = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n6_150_180_nut.Grounded = False
 
@@ -3288,17 +4455,17 @@ class Inventor:
                                 AngleOffset=angle,
                                 Count=8
                             )
-                            print("End: n6_150_60_nut")
+
+                            logger.info(f"End: {item.get("component")}")
                 # End: Nozzle 6
                 
                 # Start: Nozzle 7
-                elif item.get("component") == 'n7_250_split_flange_1' or item.get("component") == 'n7_250_split_flange':
-                        comp = 'n7_250_225_split_flange'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n7_250_225_split_flange_1' or item.get("component").startswith('n7_') and 'split_flange' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n7', '250', '225', 'split_flange'
 
                         swagged_dish = self.find_occurrence_recursive(occurrences=main_assy_def.Occurrences, target_name="CT-1950")
                         n7_plane = self.get_workplanes_by_degrees(work_planes=swagged_dish.Definition.WorkPlanes, target=nozzle_deg, tolerance=2.0)
@@ -3307,11 +4474,10 @@ class Inventor:
                         # n7_axis = self.get_work_axis(work_axes=swagged_dish.Definition.WorkAxes, axis_name="N7")
                         # n7_plane = self.get_work_plane(work_planes=swagged_dish.Definition.WorkPlanes, plane_name="N7")
 
-                        print(n7_plane.Name)
-                        print(n7_axis.Name)
                         if n7_axis is not None and n7_plane is not None:
                             self._used_nozzle_planes.append(n7_plane.Name)  # Mark plane as used
-                            print("Start: n7_250_225_split_flange")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n7_250_225_split_flange = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n7_250_225_split_flange.Grounded = False
                             n7_250_225_split_flange_y_axis_proxy = n7_250_225_split_flange.CreateGeometryProxy(n7_250_225_split_flange.Definition.WorkAxes["Y Axis"])
@@ -3345,19 +4511,18 @@ class Inventor:
                             n6_150_180_split_flange_flush_1 = main_assy_def.Constraints.AddFlushConstraint(swagged_dish_n7_plane_proxy, n7_250_225_split_flange_xy_plane_proxy, 0, None, None)
                             n6_150_180_split_flange_flush_2 = main_assy_def.Constraints.AddFlushConstraint(monoblock_nozzle_size_plane_pg, n7_250_225_split_flange_top_face_plane_proxy, -2.0, None, None)
 
-                            print("End: n7_250_225_split_flange")
+                            logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n7_250_gasket_1' or item.get("component") == 'n7_250_gasket':
-                        
-                        comp = 'n7_250_225_gasket'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n7_250_225_gasket_1' or item.get("component").startswith('n7_') and 'gasket' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n7', '250', '225', 'gasket'
                         
                         if n7_axis is not None and n7_plane is not None:
-                            print("Start: n7_250_225_gasket")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n7_250_225_gasket = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n7_250_225_gasket.Grounded = False
 
@@ -3372,18 +4537,18 @@ class Inventor:
                             n7_250_225_gasket_flush_1 = main_assy_def.Constraints.AddFlushConstraint(swagged_dish_n7_plane_proxy, n7_250_225_gasket_xy_plane_proxy, 0, None, None)
                             n7_250_225_gasket_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n7_250_225_split_flange_top_face_plane_proxy, n7_250_225_gasket_xz_plane_proxy, 2.2, None, None)
 
-                            print("End: n7_250_225_gasket")
+                            logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n7_250_blind_cover_1' or item.get("component") == 'n7_250_blind_cover':
-                    comp = 'n7_250_225_blind_cover'
-                    comp_splits = comp.split('_')
-                    nozzle_name = comp_splits[0]
-                    nozzle_size = comp_splits[1]
-                    nozzle_deg = comp_splits[2]
-                    fitting = comp_splits[3]
+                elif item.get("component") == 'n7_250_225_blind_cover_1' or item.get("component").startswith('n7_') and 'blind_cover' in item.get("component", ""):
+                    parsed = self._parse_component_name(item.get("component"))
+                    if parsed:
+                        nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                    else:
+                        nozzle_name, nozzle_size, nozzle_deg, fitting = 'n7', '250', '225', 'blind_cover'
 
                     if n7_axis is not None and n7_plane is not None:
-                        print("Start: n7_250_225_blind_cover")
+
+                        logger.info(f"Start: {item.get("component")}")
                         n7_250_225_blind_cover = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                         n7_250_225_blind_cover.Grounded = False
 
@@ -3395,18 +4560,18 @@ class Inventor:
                         n7_250_225_blind_cover_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_split_flange_xy_plane_proxy, n7_250_225_blind_cover_xy_plane_proxy, 0, None, None)
                         n7_250_225_blind_cover_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n7_250_225_gasket_ref_plane, n7_250_225_blind_cover_xz_plane_proxy, 0, None, None)
 
-                        print("End: n7_250_225_blind_cover")
+                        logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n7_250_bolt/stud_1' or item.get("component") == 'n7_250_bolt/stud':
-                        comp = 'n7_250_225_fastener'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n7_250_225_bolt/stud' or item.get("component").startswith('n7_') and ('bolt' in item.get("component", "") or 'stud' in item.get("component", "")):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n7', '250', '225', 'fastener'
 
                         if n7_axis is not None and n7_plane is not None:
-                            print("Start: n7_250_225_fastener")
+                            
+                            logger.info(f"Start: {item.get("component")}")
                             n7_250_225_fastener = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n7_250_225_fastener.Grounded = False
 
@@ -3417,18 +4582,19 @@ class Inventor:
                             n7_250_225_fastener_mate_1 = main_assy_def.Constraints.AddMateConstraint2(n7_250_225_fastener_y_axis_proxy, n7_250_225_split_flange_fastener_assly_axis_proxy, 0, 24833, 24833, 115459, None, None)
                             n7_250_225_fastener_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n7_250_225_fastener_xz_plane_proxy, n7_250_225_blind_cover_xz_plane_proxy, -1.8, None, None)
                             n7_250_225_fastener_angle = main_assy_def.Constraints.AddAngleConstraint(n7_250_225_fastener_xy_plane_proxy, n7_250_225_blind_cover_xy_plane_proxy, 0, 78593, None, None, None)
-                            print("End: n7_250_225_fastener")
 
-                elif item.get("component") == 'n7_250_washer_1' or item.get("component") == 'n7_250_washer':
-                        comp = 'n7_250_225_washer'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                            logger.info(f"End: {item.get("component")}")
+
+                elif item.get("component") == 'n7_250_225_washer' or item.get("component").startswith('n7_') and 'washer' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n7', '250', '225', 'washer'
                         
                         if n7_axis is not None and n7_plane is not None:
-                            print("Start: n7_250_225_washer")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n7_250_225_washer = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n7_250_225_washer.Grounded = False
 
@@ -3441,19 +4607,19 @@ class Inventor:
                             # n6_150_60_washer_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_washer_xz_plane_proxy, n6_150_180_split_flange_xz_plane_proxy, 0, None, None)
                             n7_250_225_washer_mate_2 = main_assy_def.Constraints.AddMateConstraint(n7_250_225_washer_xz_plane_proxy, n7_250_225_split_flange_top_face_plane_proxy, -2.8, 24833, 24833, None, None)
                             n7_250_225_washer_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n7_250_225_washer_xy_plane_proxy, n7_250_225_fastener_xy_plane_proxy, 0, None, None)
-                            print("End: n7_250_225_washer")
 
-                elif item.get("component") == 'n7_250_nut_1' or item.get("component") == 'n7_250_nut':
-                        
-                        comp = 'n7_250_225_nut'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                            logger.info(f"End: {item.get("component")}")
+
+                elif item.get("component") == 'n7_250_225_nut' or item.get("component").startswith('n7_') and 'nut' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n7', '250', '225', 'nut'
 
                         if n7_axis is not None and n7_plane is not None:
-                            print("Start: n7_250_225_nut")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n7_250_225_nut = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n7_250_225_nut.Grounded = False
 
@@ -3480,17 +4646,17 @@ class Inventor:
                                 AngleOffset=angle,
                                 Count=12
                             )
-                            print("End: n7_250_225_nut")
+
+                            logger.info(f"End: {item.get("component")}")
                 # End: Nozzle 7
                 
                 # Start: Nozzle 9
-                elif item.get("component") == 'n9_150_split_flange_1' or item.get("component") == 'n9_150_split_flange':
-                        comp = 'n9_150_265_split_flange'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n9_150_265_split_flange_1' or item.get("component").startswith('n9_') and 'split_flange' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n9', '150', '265', 'split_flange'
 
                         swagged_dish = self.find_occurrence_recursive(occurrences=main_assy_def.Occurrences, target_name="CT-1950")
                         n9_plane = self.get_workplanes_by_degrees(work_planes=swagged_dish.Definition.WorkPlanes, target=nozzle_deg, tolerance=2.0)
@@ -3499,11 +4665,10 @@ class Inventor:
                         # n9_axis = self.get_work_axis(work_axes=swagged_dish.Definition.WorkAxes, axis_name="N9")
                         # n9_plane = self.get_work_plane(work_planes=swagged_dish.Definition.WorkPlanes, plane_name="N9")
 
-                        print(n9_plane.Name)
-                        print(n9_axis.Name)
                         if n9_axis is not None and n9_plane is not None:
                             self._used_nozzle_planes.append(n9_plane.Name)  # Mark plane as used
-                            print("Start: n9_150_265_split_flange")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n9_150_265_split_flange = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n9_150_265_split_flange.Grounded = False
                             n9_150_265_split_flange_y_axis_proxy = n9_150_265_split_flange.CreateGeometryProxy(n9_150_265_split_flange.Definition.WorkAxes["Y Axis"])
@@ -3540,18 +4705,18 @@ class Inventor:
                             n9_150_265_split_flange_flush_1 = main_assy_def.Constraints.AddFlushConstraint(swagged_dish_n9_plane_proxy, n9_150_265_split_flange_xy_plane_proxy, 0, None, None)
                             n9_150_265_split_flange_flush_2 = main_assy_def.Constraints.AddFlushConstraint(monoblock_nozzle_size_plane_pg, n9_150_265_split_flange_top_face_plane_proxy, -2.0, None, None)
 
-                            print("End: n9_150_265_split_flange")
+                            logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n9_150_gasket_1' or item.get("component") == 'n9_150_gasket':
-                        comp = 'n9_150_265_gasket'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n9_150_265_gasket_1' or item.get("component").startswith('n9_') and 'gasket' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n9', '150', '265', 'gasket'
 
                         if n9_axis is not None and n9_plane is not None:
-                            print("Start: n9_150_265_gasket")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n9_150_265_gasket = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n9_150_265_gasket.Grounded = False
 
@@ -3566,18 +4731,18 @@ class Inventor:
                             n9_150_265_gasket_flush_1 = main_assy_def.Constraints.AddFlushConstraint(swagged_dish_n9_plane_proxy, n9_150_265_gasket_xy_plane_proxy, 0, None, None)
                             n9_150_265_gasket_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n9_150_265_split_flange_top_face_plane_proxy, n9_150_265_gasket_xz_plane_proxy, 2.2, None, None)
 
-                            print("End: n9_150_265_gasket")
+                            logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n9_150_blind_cover_1' or item.get("component") == 'n9_150_blind_cover':
-                    comp = 'n9_150_265_blind_cover'
-                    comp_splits = comp.split('_')
-                    nozzle_name = comp_splits[0]
-                    nozzle_size = comp_splits[1]
-                    nozzle_deg = comp_splits[2]
-                    fitting = comp_splits[3]
+                elif item.get("component") == 'n9_150_265_blind_cover_1' or item.get("component").startswith('n9_') and 'blind_cover' in item.get("component", ""):
+                    parsed = self._parse_component_name(item.get("component"))
+                    if parsed:
+                        nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                    else:
+                        nozzle_name, nozzle_size, nozzle_deg, fitting = 'n9', '150', '265', 'blind_cover'
 
                     if n9_axis is not None and n9_plane is not None:
-                        print("Start: n9_150_265_blind_cover")
+
+                        logger.info(f"Start: {item.get("component")}")
                         n9_150_265_blind_cover = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                         n9_150_265_blind_cover.Grounded = False
 
@@ -3592,18 +4757,18 @@ class Inventor:
                         n9_150_265_blind_cover_angle = main_assy_def.Constraints.AddAngleConstraint(n9_150_265_split_flange_xy_plane_proxy, n9_150_265_blind_cover_xy_plane_proxy, '22.5 deg', 78593, None, None, None)
                         n9_150_265_blind_cover_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n9_150_265_gasket_ref_plane, n9_150_265_blind_cover_xz_plane_proxy, 0, None, None)
 
-                        print("End: n9_150_265_blind_cover")
+                        logger.info(f"End: {item.get("component")}")
                 
-                elif item.get("component") == 'n9_150_bolt/stud_1' or item.get("component") == 'n9_150_bolt/stud':
-                        comp = 'n9_150_265_fastener'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n9_150_265_bolt/stud' or item.get("component").startswith('n9_') and ('bolt' in item.get("component", "") or 'stud' in item.get("component", "")):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n9', '150', '265', 'fastener'
 
                         if n9_axis is not None and n9_plane is not None:
-                            print("Start: n9_150_265_fastener")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n9_150_265_fastener = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n9_150_265_fastener.Grounded = False
 
@@ -3614,17 +4779,18 @@ class Inventor:
                             n9_150_265_fastener_mate_1 = main_assy_def.Constraints.AddMateConstraint2(n9_150_265_fastener_y_axis_proxy, n9_150_265_split_flange_fastener_assly_axis_proxy, 0, 24833, 24833, 115459, None, None)
                             n9_150_265_fastener_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n9_150_265_fastener_xz_plane_proxy, n9_150_265_blind_cover_xz_plane_proxy, -1.8, None, None)
                             n9_150_265_fastener_angle = main_assy_def.Constraints.AddAngleConstraint(n9_150_265_fastener_xy_plane_proxy, n9_150_265_blind_cover_xy_plane_proxy, 0, 78593, None, None, None)
-                            print("End: n9_150_265_fastener")
 
-                elif item.get("component") == 'n9_150_washer_1' or item.get("component") == 'n9_150_washer':
-                        comp = 'n9_150_265_washer'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                            logger.info(f"End: {item.get("component")}")
+
+                elif item.get("component") == 'n9_150_265_washer' or item.get("component").startswith('n9_') and 'washer' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n9', '150', '265', 'washer'
                         if n9_axis is not None and n9_plane is not None:
-                            print("Start: n9_150_265_washer")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n9_150_265_washer = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n9_150_265_washer.Grounded = False
 
@@ -3637,18 +4803,19 @@ class Inventor:
                             # n6_150_60_washer_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_washer_xz_plane_proxy, n6_150_180_split_flange_xz_plane_proxy, 0, None, None)
                             n9_150_265_washer_mate_2 = main_assy_def.Constraints.AddMateConstraint(n9_150_265_washer_xz_plane_proxy, n9_150_265_split_flange_top_face_plane_proxy, -2.2, 24833, 24833, None, None)
                             n9_150_265_washer_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n9_150_265_washer_xy_plane_proxy, n9_150_265_fastener_xy_plane_proxy, 0, None, None)
-                            print("End: n9_150_265_washer")
+
+                            logger.info(f"End: {item.get("component")}")
                             
-                elif item.get("component") == 'n9_150_nut_1' or item.get("component") == 'n9_150_nut':
-                        comp = 'n9_150_265_nut'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n9_150_265_nut' or item.get("component").startswith('n9_') and 'nut' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n9', '150', '265', 'nut'
 
                         if n9_axis is not None and n9_plane is not None:
-                            print("Start: n9_150_265_nut")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n9_150_265_nut = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n9_150_265_nut.Grounded = False
 
@@ -3675,17 +4842,17 @@ class Inventor:
                                 AngleOffset=angle,
                                 Count=8
                             )
-                            print("End: n9_150_265_nut")
+
+                            logger.info(f"End: {item.get("component")}")
                 # End: Nozzle 09
                 
                 # Start: Nozzle 10
-                elif item.get("component") == 'n10_150_split_flange_1' or item.get("component") == 'n10_150_split_flange':
-                        comp = 'n10_150_300_split_flange'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n10_150_300_split_flange_1' or item.get("component").startswith('n10_') and 'split_flange' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n10', '150', '300', 'split_flange'
 
                         swagged_dish = self.find_occurrence_recursive(occurrences=main_assy_def.Occurrences, target_name="CT-1950")
                         n10_plane = self.get_workplanes_by_degrees(work_planes=swagged_dish.Definition.WorkPlanes, target=nozzle_deg, tolerance=2.0)
@@ -3694,11 +4861,10 @@ class Inventor:
                         # n10_axis = self.get_work_axis(work_axes=swagged_dish.Definition.WorkAxes, axis_name="N10")
                         # n10_plane = self.get_work_plane(work_planes=swagged_dish.Definition.WorkPlanes, plane_name="N10")
 
-                        print(n10_plane.Name)
-                        print(n10_axis.Name)
                         if n10_axis is not None and n10_plane is not None:
                             self._used_nozzle_planes.append(n10_plane.Name)  # Mark plane as used
-                            print("Start: n10_150_300_split_flange")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n10_150_300_split_flange = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n10_150_300_split_flange.Grounded = False
                             n10_150_300_split_flange_y_axis_proxy = n10_150_300_split_flange.CreateGeometryProxy(n10_150_300_split_flange.Definition.WorkAxes["Y Axis"])
@@ -3735,18 +4901,18 @@ class Inventor:
                             n10_150_300_split_flange_flush_1 = main_assy_def.Constraints.AddFlushConstraint(swagged_dish_n10_plane_proxy, n10_150_300_split_flange_xy_plane_proxy, 0, None, None)
                             n10_150_300_split_flange_flush_2 = main_assy_def.Constraints.AddFlushConstraint(monoblock_nozzle_size_plane_pg, n10_150_300_split_flange_top_face_plane_proxy, -2.0, None, None)
 
-                            print("End: n10_150_300_split_flange")
+                            logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n10_150_gasket_1' or item.get("component") == 'n10_150_gasket':
-                        comp = 'n10_150_300_gasket'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n10_150_300_gasket_1' or item.get("component").startswith('n10_') and 'gasket' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n10', '150', '300', 'gasket'
 
                         if n10_axis is not None and n10_plane is not None:
-                            print("Start: n10_150_300_gasket")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n10_150_300_gasket = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n10_150_300_gasket.Grounded = False
 
@@ -3761,18 +4927,18 @@ class Inventor:
                             n10_150_300_gasket_gasket_flush_1 = main_assy_def.Constraints.AddFlushConstraint(swagged_dish_n10_plane_proxy, n10_150_300_gasket_xy_plane_proxy, 0, None, None)
                             n10_150_300_gasket_gasket_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n10_150_300_split_flange_top_face_plane_proxy, n10_150_300_gasket_xz_plane_proxy, 2.2, None, None)
 
-                            print("End: n10_150_300_gasket")
+                            logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n10_150_blind_cover_1' or item.get("component") == 'n10_150_blind_cover':
-                    comp = 'n10_150_300_blind_cover'
-                    comp_splits = comp.split('_')
-                    nozzle_name = comp_splits[0]
-                    nozzle_size = comp_splits[1]
-                    nozzle_deg = comp_splits[2]
-                    fitting = comp_splits[3]
+                elif item.get("component") == 'n10_150_300_blind_cover_1' or item.get("component").startswith('n10_') and 'blind_cover' in item.get("component", ""):
+                    parsed = self._parse_component_name(item.get("component"))
+                    if parsed:
+                        nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                    else:
+                        nozzle_name, nozzle_size, nozzle_deg, fitting = 'n10', '150', '300', 'blind_cover'
 
                     if n10_axis is not None and n10_plane is not None:
-                        print("Start: n10_150_300_blind_cover")
+  
+                        logger.info(f"Start: {item.get("component")}")
                         n10_150_300_blind_cover = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                         n10_150_300_blind_cover.Grounded = False
 
@@ -3785,18 +4951,18 @@ class Inventor:
                         n10_150_300_blind_cover_angle = main_assy_def.Constraints.AddAngleConstraint(n10_150_300_split_flange_xy_plane_proxy, n10_150_300_blind_cover_xy_plane_proxy, '22.5 deg', 78593, None, None, None)
                         n10_150_300_blind_cover_flush_2 = main_assy_def.Constraints.AddFlushConstraint(n10_150_300_gasket_ref_plane, n10_150_300_blind_cover_xz_plane_proxy, 0, None, None)
 
-                        print("End: n10_150_300_blind_cover")
+                        logger.info(f"End: {item.get("component")}")
 
-                elif item.get("component") == 'n10_150_bolt/stud_1' or item.get("component") == 'n10_150_bolt/stud':
-                        comp = 'n10_150_300_fastener'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                elif item.get("component") == 'n10_150_300_bolt/stud' or item.get("component").startswith('n10_') and ('bolt' in item.get("component", "") or 'stud' in item.get("component", "")):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n10', '150', '300', 'fastener'
 
                         if n10_axis is not None and n10_plane is not None:
-                            print("Start: n10_150_300_fastener")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n10_150_300_fastener = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n10_150_300_fastener.Grounded = False
 
@@ -3807,18 +4973,19 @@ class Inventor:
                             n10_150_300_fastener_mate_1 = main_assy_def.Constraints.AddMateConstraint2(n10_150_300_fastener_y_axis_proxy, n10_150_300_split_flange_fastener_assly_axis_proxy, 0, 24833, 24833, 115459, None, None)
                             n10_150_300_fastener_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n10_150_300_fastener_xz_plane_proxy, n10_150_300_blind_cover_xz_plane_proxy, -1.8, None, None)
                             n10_150_300_fastener_angle = main_assy_def.Constraints.AddAngleConstraint(n10_150_300_fastener_xy_plane_proxy, n10_150_300_blind_cover_xy_plane_proxy, 0, 78593, None, None, None)
-                            print("End: n10_150_300_fastener")
 
-                elif item.get("component") == 'n10_150_washer_1' or item.get("component") == 'n10_150_washer':
-                        comp = 'n10_150_300_washer'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                            logger.info(f"End: {item.get("component")}")
+
+                elif item.get("component") == 'n10_150_300_washer' or item.get("component").startswith('n10_') and 'washer' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n10', '150', '300', 'washer'
 
                         if n10_axis is not None and n10_plane is not None:
-                            print("Start: n10_150_300_washer")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n10_150_300_washer = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n10_150_300_washer.Grounded = False
 
@@ -3831,18 +4998,19 @@ class Inventor:
                             # n6_150_60_washer_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n6_150_180_washer_xz_plane_proxy, n6_150_180_split_flange_xz_plane_proxy, 0, None, None)
                             n10_150_300_washer_mate_2 = main_assy_def.Constraints.AddMateConstraint(n10_150_300_washer_xz_plane_proxy, n10_150_300_split_flange_top_face_plane_proxy, -2.2, 24833, 24833, None, None)
                             n10_150_300_washer_flush_1 = main_assy_def.Constraints.AddFlushConstraint(n10_150_300_washer_xy_plane_proxy, n10_150_300_fastener_xy_plane_proxy, 0, None, None)
-                            print("End: n10_150_300_washer")
 
-                elif item.get("component") == 'n10_150_nut_1' or item.get("component") == 'n10_150_nut':
-                        comp = 'n10_150_300_nut'
-                        comp_splits = comp.split('_')
-                        nozzle_name = comp_splits[0]
-                        nozzle_size = comp_splits[1]
-                        nozzle_deg = comp_splits[2]
-                        fitting = comp_splits[3]
+                            logger.info(f"End: {item.get("component")}")
+
+                elif item.get("component") == 'n10_150_300_nut' or item.get("component").startswith('n10_') and 'nut' in item.get("component", ""):
+                        parsed = self._parse_component_name(item.get("component"))
+                        if parsed:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = parsed['nozzle'], parsed['size'], parsed['degree'], parsed['fitting']
+                        else:
+                            nozzle_name, nozzle_size, nozzle_deg, fitting = 'n10', '150', '300', 'nut'
 
                         if n10_axis is not None and n10_plane is not None:
-                            print("Start: n10_150_300_nut")
+
+                            logger.info(f"Start: {item.get("component")}")
                             n10_150_300_nut = main_assy_def.Occurrences.Add(item["filepath"], tg.CreateMatrix())
                             n10_150_300_nut.Grounded = False
 
@@ -3869,7 +5037,8 @@ class Inventor:
                                 AngleOffset=angle,
                                 Count=8
                             )
-                            print("End: n10_150_300_nut")
+
+                            logger.info(f"End: {item.get("component")}")
             
             so_no = model_details['details']['sono']
             capacity = model_details['details']['capacity']

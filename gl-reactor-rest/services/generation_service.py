@@ -1,9 +1,33 @@
 import json
 import os
 import re
+import logging
+from datetime import datetime
 from services.vault_service import Vault
 from services.inventor_service import Inventor
 from repositories.mongo_db import Mongo
+
+# Configure logging with date-wise file logging
+LOG_DIR = r"D:\GL\logs"
+os.makedirs(LOG_DIR, exist_ok=True)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+if not logger.handlers:
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_format = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+    console_handler.setFormatter(console_format)
+
+    log_filename = os.path.join(LOG_DIR, f"generation_{datetime.now().strftime('%Y-%m-%d')}.log")
+    file_handler = logging.FileHandler(log_filename, encoding='utf-8')
+    file_handler.setLevel(logging.DEBUG)
+    file_format = logging.Formatter('%(asctime)s [%(levelname)s] [%(funcName)s:%(lineno)d] %(message)s')
+    file_handler.setFormatter(file_format)
+
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
 class Generation:
     def __init__(self):
         self.vault = Vault()
@@ -30,7 +54,7 @@ class Generation:
                 data_list = []
             except Exception as e:
                 print(f"Error reading file: {e}")
-                return data_list
+                return []
         return data_list
     
     def extract_item_codes(self, obj, component=None):
@@ -315,12 +339,10 @@ class Generation:
 
             if component_name in target_components:
                 key, data = next(iter(comp_dict.items()))
-                
+
                 comp_name = data.get('component', key)
                 model_info = data.get('model_info', {})
 
-                'namePlateBracket', 'driveHood', 'diaphragmRing', 'springBalanceAssembly',
-                'MHCClamp', 'coc', 'bfCClamp', 'agitator', 'shaftclosure', 'gearbox', 'motor'
                 id = id + 1
                 flat_list.append({
                     'id': id,
@@ -678,20 +700,17 @@ class Generation:
                     nozzle_name = nozzle.get("nozzle_name", "").lower()
                     size = str(nozzle.get("size", "")).lower()
                     degree = str(nozzle.get("degree", "")).lower()
-                    if degree == '-' or degree == None or degree == '':
+                    if degree in ('-', '', 'none') or degree is None:
                         degree = 'D'
                     fittings = nozzle.get("fittings", [])
                     for fit in fittings:
                         member = fit.get("name", "").lower().replace(" ", "_")
                         drawing = fit.get("drawingNumber")
                         itemcode = fit.get("itemCode")
-                        id = fit.get("id")
+                        fit_id = fit.get("id", 1)
 
-                        if id != None:
-                            # FITTING comp → n1_500_gasket
-                            comp_id = f"{nozzle_name}_{size}_{degree}_{member}_{id}"
-                        else:
-                            comp_id = f"{nozzle_name}_{size}_{degree}_{member}"
+                        # FITTING comp → n1_500_gasket_1
+                        comp_id = f"{nozzle_name}_{size}_{degree}_{member}_{fit_id}"
 
                         # Add fitting entry
                         results.append(make_entry(
@@ -901,117 +920,24 @@ class Generation:
         return (2, entry["id"])  # everything else stays after
 
     def generate_model(self, model_details):
+        """
+        Generate a 3D model by extracting component data, retrieving files from Vault,
+        and triggering Inventor automation.
+
+        Args:
+            model_details: Dictionary containing model configuration and specifications
+
+        Returns:
+            bool: True if model generation succeeded, False otherwise
+        """
         components = self.get_component_list(model_details=model_details)
-        standard_model = self.build_standard_model(data = components)
-        # result_id = self.mongo.insert(collection_name="standard_models", document=standard_model)
+        standard_model = self.build_standard_model(data=components)
         components_details = self.extract_component_data(data=standard_model)
         results = sorted(components_details, key=self.sort_key)
         results.insert(67, {'id':21, 'comp': 'coc_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0104', 'sub_components': []})
         results.insert(73, {'id':27, 'comp': 'mechanical_seal_washer', 'partnumber': '', 'member': '', 'itemcode':'13WS0013', 'sub_components': []})
         results.insert(74, {'id':28, 'comp': 'mechanical_seal_fastener', 'partnumber': '', 'member': '', 'itemcode':'13CS0237', 'sub_components': []})
-        
-        component_item_codes = [{'id':1, 'comp': 'monoblock', 'partnumber': '', 'member': '','itemcode':'7005CE06300-000', 'sub_components': []}, # done 1 : monoblock - 
-                                {'id':2, 'comp': 'jacket', 'partnumber': '', 'member': '', 'itemcode':'5625-0015', 'sub_components': []}, # done 56 : jacket - 
-                                {'id':3, 'comp': 'diapharmring', 'partnumber': '', 'member': '', 'itemcode':'3616-0003', 'sub_components': []}, # done 63 : diaphragmring - 
-                                {'id':4, 'comp': 'sidebracket', 'partnumber': '', 'member': '', 'itemcode':'5605B-0016', 'sub_components': []}, # done 61 : sidebracket
-                                {'id':5, 'comp': 'earthing_boss', 'partnumber': '', 'member': '', 'itemcode':'3627-0009', 'sub_components': []}, # done 62 : earthing
-                                {'id':6, 'comp': 'jacketnozzle_shell', 'partnumber': '', 'member': '', 'itemcode':'5621-1035', 'sub_components': []}, # done 57 : jacketnozzle_n16_shell, 58 : jacketnozzle_n15_shell
-                                {'id':7, 'comp': 'jacketnozzle_bottom', 'partnumber': '', 'member': '', 'itemcode':'5621-1036', 'sub_components': []}, # done 59 : jacketnozzle_n17_btm, 60 : jacketnozzle_n11_btm
-                                {'id':8, 'comp': 'ms_coupling', 'partnumber': '', 'member': 'SA105_COUPLING_50L_96-GPF-7236-17834 R3.iam', 'itemcode':'', 'sub_components': []}, #5617NS0028 # 87 : airvent_coupling_n13, 89 : airvent_coupling_n11
-                                {'id':9, 'comp': 'baffle_plate', 'partnumber': '', 'member': '', 'itemcode':'3502B0108', 'sub_components': []}, # add to jacket nozzle for btm 
-                                {'id':9.1, 'comp': 'baffle_bend_plate', 'partnumber': '', 'member': '', 'itemcode':'3502B0099', 'sub_components': []}, # add to jacket nozzle for shell
-                                # Manhole
-                                {'id':10, 'comp': 'manhole_gasket_1', 'partnumber': '', 'member': '', 'itemcode':'T1-0086', 'sub_components': []}, # done 2 : n1_500_gasket_1
-                                {'id':11, 'comp': 'bush_type_protection_ring', 'partnumber': '', 'member': '', 'itemcode':'T5B0579', 'sub_components': []}, # done 3 : n1_500_manhole_protection_ring
-                                {'id':12, 'comp': 'manhole_gasket_2', 'partnumber': '', 'member': '', 'itemcode':'T1-0086', 'sub_components': []}, # done 4: n1_500_gasket_2
-                                {'id':13, 'comp': 'manhole_cover', 'partnumber': '', 'member': '', 'itemcode':'7053-0115', 'sub_components': []}, # done 5: n1_500_manhole_cover
-                                {'id':14, 'comp': 'manhole_c_clamp', 'partnumber': '', 'member': '', 'itemcode':'79010136', 'sub_components': []}, # done : 64 : mhcclamp
-                                {'id':15, 'comp': 'spring_balance_assembly', 'partnumber': '', 'member': '90-GPF-5403 R1_SPRING BALANCE ASSLY WITH WASHER_500NB_FAST.iam', 'itemcode':'', 'sub_components': []}, #56181000-0101 # done 63 : springbalanceassembly
-                                
-                                {'id':16, 'comp': 'manhole_sight_glass_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0362', 'sub_components': []}, # 6 : n1_500_sightglassgasket_3 * gasket size: 100
-                                {'id':17, 'comp': 'manhole_sight_glass', 'partnumber': '', 'member': '', 'itemcode':'760039', 'sub_components': []}, # * toughened glass 7 : n1_500_toughenedglass_1
-                                {'id':18, 'comp': 'manhole_sight_flange', 'partnumber': '', 'member': '', 'itemcode':'5602-0092', 'sub_components': []}, # done 6: n1_500_sight/light_glass_flange
-                                
-                                {'id':19, 'comp': 'manhole_washer', 'partnumber': '', 'member': '', 'itemcode':'13WS0151', 'sub_components': []}, # done 7 : n1_500_washer
-                                {'id':20, 'comp': 'manhole_fastener', 'partnumber': '', 'member': '', 'itemcode':'13CS2366', 'sub_components': []}, # done 8: n1_500_bolt/stud
 
-                                # COC
-                                {'id':21, 'comp': 'coc_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0104', 'sub_components': []}, # add * fittings module in coc
-                                {'id':22, 'comp': 'coc', 'partnumber': '', 'member': '', 'itemcode':'7004-0002', 'sub_components': []}, # done 65 : coc
-                                {'id':23, 'comp': 'coc_c_clamp', 'partnumber': '', 'member': '', 'itemcode':'79010013', 'sub_components': []}, # body flange c-clamp 66 : bfcclamp
-                                {'id':24, 'comp': 'center_nozzle_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0365', 'sub_components': []}, # m nozzle 52 : m_200_gasket
-                                {'id':25, 'comp': 'drive_assembly', 'partnumber': '', 'member': 'HD100M-60-160-015-DM-0007_RATIO_14_CGL_IE3_GL.iam', 'itemcode':'', 'sub_components': []}, # done 72 : driveassembly
-                                {'id':26, 'comp': 'mechanical_seal', 'partnumber': '', 'member': '', 'itemcode':'80061824', 'sub_components': []}, # done shaftclousure 69 : shaftclosure
-
-                                {'id':27, 'comp': 'mechanical_seal_washer', 'partnumber': '', 'member': '', 'itemcode':'13WS0013', 'sub_components': []}, # Add fasteners module in shaftclosure
-                                {'id':28, 'comp': 'mechanical_seal_fastener', 'partnumber': '', 'member': '', 'itemcode':'13CS0237', 'sub_components': []}, # Add fasteners module in shaftclosure
-
-                                {'id':29, 'comp': 'agitator', 'partnumber': '', 'member': '', 'itemcode':'9015-0019', 'sub_components': []}, # done 68 : agitator
-                                
-                                # N2 nozzle -----------------------------------------------------------------
-                                {'id':30, 'comp': 'n2_150_60_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0360', 'sub_components': []}, # 9: n2_150_split_flange
-                                {'id':31, 'comp': 'n2_150_60_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0364', 'sub_components': []}, # 10 : n2_150_gasket
-                                {'id':32, 'comp': 'n2_150_60_blind_cover', 'partnumber': '', 'member': '', 'itemcode':'7058-0019', 'sub_components': []}, # 11 : n2_150_blind_cover
-
-                                {'id':33, 'comp': 'n2_150_60_fastener', 'partnumber': '', 'member': '', 'itemcode':'13CS0069', 'sub_components': []}, # 12 : n2_150_bolt/stud
-                                {'id':34, 'comp': 'n2_150_60_washer', 'partnumber': '', 'member': '', 'itemcode':'13WS0155', 'sub_components': []}, # 13 : n2_150_washer
-                                {'id':35, 'comp': 'n2_150_60_nut', 'partnumber': '', 'member': '', 'itemcode':'13CSNT-0007', 'sub_components': []}, # 14 : n2_150_nut
-
-                                # N3 nozzle
-                                {'id':36, 'comp': 'n3_150_95_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0360', 'sub_components': []}, # 15 : n3_150_split_flange
-                                {'id':37, 'comp': 'n3_150_95_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0364', 'sub_components': []}, # 16 : n3_150_gasket
-                                {'id':38, 'comp': 'n3_150_95_blind_cover', 'partnumber': '', 'member': '', 'itemcode':'7058-0019', 'sub_components': []}, # 17 : n3_150_blind_cover
-                                
-                                {'id':39, 'comp': 'n3_150_95_fastener', 'partnumber': '', 'member': '', 'itemcode':'13CS0069', 'sub_components': []}, # 18 : n3_150_bolt/stud
-                                {'id':40, 'comp': 'n3_150_95_washer', 'partnumber': '', 'member': '', 'itemcode':'13WS0155', 'sub_components': []}, # 19 : n3_150_washer
-                                {'id':41, 'comp': 'n3_150_95_nut', 'partnumber': '', 'member': '', 'itemcode':'13CSNT-0007', 'sub_components': []}, # 20 : n3_150_nut
-
-                                # N5 nozzle
-                                {'id':42, 'comp': 'n5_250_135_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0354', 'sub_components': []}, # 21 : n5_250_split_flange
-                                {'id':43, 'comp': 'n5_250_135_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0366', 'sub_components': []}, # 22 : n5_250_gasket
-                                {'id':44, 'comp': 'n5_250_135_baffle', 'partnumber': '', 'member': '', 'itemcode':'901601-0033', 'sub_components': []}, # 23 : n5_250_baffle
-
-                                {'id':45, 'comp': 'n5_250_135_fastener', 'partnumber': '', 'member': '', 'itemcode':'13CS0072', 'sub_components': []}, # 24 : n5_250_bolt/stud
-                                {'id':46, 'comp': 'n5_250_135_washer', 'partnumber': '', 'member': '', 'itemcode':'13WS0155', 'sub_components': []}, # 25 : n5_250_washer
-                                {'id':47, 'comp': 'n5_250_135_nut', 'partnumber': '', 'member': '', 'itemcode':'13CSNT-0007', 'sub_components': []}, # 26 : n5_250_nut
-
-                                # N6 nozzle
-                                {'id':48, 'comp': 'n6_150_180_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0352', 'sub_components': []}, # 27 : n6_150_split_flange
-                                {'id':49, 'comp': 'n6_150_180_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0364', 'sub_components': []}, # 28 : n6_150_gasket
-                                {'id':50, 'comp': 'n6_150_180_toughenedglass', 'partnumber': '', 'member': '', 'itemcode':'760031', 'sub_components': []}, # 29 : n6_150_toughened_glass
-                                {'id':51, 'comp': 'n6_150_180_lightglass', 'partnumber': '', 'member': '', 'itemcode':'5602-0094', 'sub_components': []}, # 30 : n6_150_sight/light_glass_flange
-                                {'id':52, 'comp': 'n6_150_180_fastener', 'partnumber': '', 'member': '', 'itemcode':'13CS0072', 'sub_components': []}, # 31 : n6_150_bolt/stud
-                                {'id':53, 'comp': 'n6_150_180_washer', 'partnumber': '', 'member': '', 'itemcode':'13WS0155', 'sub_components': []}, # 32 : n6_150_washer
-                                {'id':54, 'comp': 'n6_150_180_nut', 'partnumber': '', 'member': '', 'itemcode':'13CSNT-0007', 'sub_components': []}, # 33 : n6_150_nut
-
-                                {'id':55, 'comp': 'n7_250_225_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0361', 'sub_components': []}, # 34 : n7_250_split_flange
-                                {'id':56, 'comp': 'n7_250_225_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0366', 'sub_components': []}, # 35 : n7_250_gasket
-                                {'id':57, 'comp': 'n7_250_225_blind_cover', 'partnumber': '', 'member': '', 'itemcode':'7058-0021', 'sub_components': []}, # 36 : n7_250_blind_cover
-
-                                {'id':58, 'comp': 'n7_250_225_fastener', 'partnumber': '', 'member': '', 'itemcode':'13CS2298', 'sub_components': []}, # 37 : n7_250_bolt/stud
-                                {'id':59, 'comp': 'n7_250_225_washer', 'partnumber': '', 'member': '', 'itemcode':'13WS0156', 'sub_components': []}, # 38 : n7_250_washer
-                                {'id':60, 'comp': 'n7_250_225_nut', 'partnumber': '', 'member': '', 'itemcode':'13CSNT-0008', 'sub_components': []}, # 39 : n7_250_nut
-
-                                # N9 nozzle
-                                {'id':61, 'comp': 'n9_150_265_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0360', 'sub_components': []}, # 40 : n9_150_split_flange
-                                {'id':62, 'comp': 'n9_150_265_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0364', 'sub_components': []}, # 41 : n9_150_gasket
-                                {'id':63, 'comp': 'n9_150_265_blind_cover', 'partnumber': '', 'member': '', 'itemcode':'7058-0019', 'sub_components': []}, # 42 : n9_150_blind_cover
-
-                                {'id':64, 'comp': 'n9_150_265_fastener', 'partnumber': '', 'member': '', 'itemcode':'13CS0069', 'sub_components': []}, # 43 : n9_150_bolt/stud
-                                {'id':65, 'comp': 'n9_150_265_washer', 'partnumber': '', 'member': '', 'itemcode':'13WS0155', 'sub_components': []}, # 44 : n9_150_washer
-                                {'id':66, 'comp': 'n9_150_265_nut', 'partnumber': '', 'member': '', 'itemcode':'13CSNT-0007', 'sub_components': []}, # 45 : n9_150_nut
-                                
-                                # N10 nozzle
-                                {'id':67, 'comp': 'n10_150_300_split_flange', 'partnumber': '', 'member': '', 'itemcode':'5619-0360', 'sub_components': []}, # 46 : n10_150_split_flange
-                                {'id':68, 'comp': 'n10_150_300_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0364', 'sub_components': []}, # 47 : n10_150_gasket
-                                {'id':69, 'comp': 'n10_150_300_blind_cover', 'partnumber': '', 'member': '', 'itemcode':'7058-0019', 'sub_components': []}, # 48 : n10_150_blind_cover
-
-                                {'id':70, 'comp': 'n10_150_300_fastener', 'partnumber': '', 'member': '', 'itemcode':'13CS0069', 'sub_components': []}, # 49 : n10_150_bolt/stud
-                                {'id':71, 'comp': 'n10_150_300_washer', 'partnumber': '', 'member': '', 'itemcode':'13WS0155', 'sub_components': []}, # 50 : n10_150_washer
-                                {'id':72, 'comp': 'n10_150_300_nut', 'partnumber': '', 'member': '', 'itemcode':'13CSNT-0007', 'sub_components': []}, # 51 : n10_150_nut
-                                ]
-
-        # downloaded_components_files = self.vault.find_files_by_item_codes(item_codes=component_item_codes)
         downloaded_components_files = self.vault.find_files_by_item_codes(item_codes=results)
         is_generated = self.inventor.generate(components=downloaded_components_files, model_details=model_details)
         return is_generated
