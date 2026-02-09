@@ -34,57 +34,5 @@ def serve_vue_root():
     # return "running"
     return FileResponse(os.path.join(static_dir, "index.html"))
 
-# ===================================== Nameplate Generation Testing ========================================
-# def main():
-#     import time
-#     from pyautocad import Autocad, APoint
-#     from win32com.client import constants
-
-#     acad = Autocad(create_if_not_exists=True)
-#     acad.app.Visible = True  # helpful for debugging
-
-#     dwg_path = r"D:\E Drive Data\Ketan\Projects\Name_Plate_Generation\NP-REF.dwg"
-#     pdf_path = r"D:\E Drive Data\Ketan\Projects\Name_Plate_Generation\output.pdf"
-
-#     # -------------------------------
-#     # 1. Open DWG
-#     # -------------------------------
-#     doc = acad.app.Documents.Open(dwg_path)
-#     time.sleep(1)
-
-#     # doc.Regen(constants.acAllViewports)
-
-#     # -------------------------------
-#     # 3. Plot to PDF (Model Space)
-#     # -------------------------------
-#     # layout = doc.Layouts.Item("Model")
-#     for layout in doc.Layouts:
-#         print(layout.Name)
-#         if layout.Name != "Model":
-#             block = layout.Block
-#             for obj in block:
-#                 print(layout.Name, obj.ObjectName)
-#     layout.ConfigName = "DWG To PDF.pc3"
-#     layout.CanonicalMediaName = "ISO_full_bleed_A3_(420.00_x_297.00_MM)"
-#     layout.PlotRotation = constants.ac90degrees
-#     layout.StandardScale = constants.acScaleToFit
-#     layout.CenterPlot = True
-#     layout.PlotType = constants.acExtents
-#     layout.StyleSheet = "monochrome.ctb"
-
-#     # Output file
-#     doc.Plot.PlotToFile(pdf_path)
-
-#     # -------------------------------
-#     # 4. Save & close
-#     # -------------------------------
-#     doc.Save()
-#     doc.Close()
-
-#     print("PDF exported:", pdf_path)
-
-
-
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
-    # main()
