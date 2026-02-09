@@ -49,11 +49,20 @@ DIM_CONSTRAINT_HORIZONTAL = 19201
 DIM_CONSTRAINT_VERTICAL = 19202
 DIM_CONSTRAINT_ALIGNED = 19203
 
-# Nozzle angles (degrees)
+# Nozzle angles (degrees) - DEPRECATED: Use dynamic angles from item.get('nozzle_degree')
+# These constants are kept for backward compatibility when nozzle_degree is not provided
 NOZZLE_N16_ANGLE = -28      # First jacket nozzle (shell top)
 NOZZLE_N15_ANGLE = -135     # Second jacket nozzle (shell top)
 NOZZLE_N11_ANGLE = -90      # Third jacket nozzle (bottom)
 NOZZLE_N17_ANGLE = -270     # Fourth jacket nozzle (bottom)
+
+# Default jacket nozzle angles (used as fallback when item.nozzle_degree not provided)
+JACKET_NOZZLE_DEFAULT_ANGLES = {
+    "n16": -28,
+    "n15": -135,
+    "n11": -90,
+    "n17": -270,
+}
 
 # Work plane/axis names
 AXIS_Y = "Y Axis"
@@ -533,7 +542,10 @@ class Inventor:
 
     def _is_vessel_nozzle(self, component_name):
         """
-        Check if component is a vessel nozzle (N2, N3, N5, N6, N7, N9, N10).
+        Check if component is a vessel nozzle (any N2+ nozzle).
+
+        Excludes N1 (manhole) and M (center nozzle) which have special handling.
+        Dynamically handles any vessel nozzle number (N2, N3, N4, N5, ..., N15, etc.)
 
         Args:
             component_name: Component name string
@@ -542,11 +554,26 @@ class Inventor:
             bool: True if vessel nozzle component
         """
         parsed = self._parse_component_name(component_name)
-        if parsed and parsed['nozzle'] in ['n2', 'n3', 'n5', 'n6', 'n7', 'n9', 'n10']:
-            return True
+        if not parsed:
+            return False
+
+        nozzle = parsed['nozzle'].lower()
+
+        # Exclude manhole (n1) and center nozzle (m) - they have special handling
+        if nozzle == 'n1' or nozzle == 'm':
+            return False
+
+        # Accept any nozzle starting with 'n' followed by a number >= 2
+        if nozzle.startswith('n'):
+            try:
+                nozzle_num = int(nozzle[1:])
+                return nozzle_num >= 2
+            except ValueError:
+                return False
+
         return False
 
-    def _get_component_handler(self, component_name: str):
+    def _get_component_handler(self, component_name: str, item: dict = None):
         """
         Match component name to handler using pattern matching.
 
@@ -555,6 +582,7 @@ class Inventor:
 
         Args:
             component_name: Component name string
+            item: Optional item dict containing component data (may include fastener_count)
 
         Returns:
             tuple: (handler_method, config_dict, parsed_info) or (None, None, None)
@@ -570,6 +598,10 @@ class Inventor:
             nozzle_config = NOZZLE_CONFIG.get(nozzle, {})
             fitting_config = FITTING_CONFIG.get(fitting, {})
             combined_config = {**nozzle_config, **fitting_config}
+
+            # Override fastener_count from item data if provided (dynamic handling)
+            if item and 'fastener_count' in item:
+                combined_config['fastener_count'] = item['fastener_count']
 
             # Determine handler based on fitting type
             if 'split_flange' in fitting:
@@ -1511,7 +1543,7 @@ class Inventor:
 
                 # Dynamic handler dispatch (when use_dynamic_handlers=True)
                 if use_dynamic_handlers:
-                    handler, config, parsed = self._get_component_handler(component_name)
+                    handler, config, parsed = self._get_component_handler(component_name, item)
                     if handler is not None:
                         try:
                             logger.info(f"[DYNAMIC] Processing: {component_name}")
@@ -1795,11 +1827,15 @@ class Inventor:
 
                 elif item.get("component") == 'jacketnozzle_n16_shell':
                     # ---------------------------------------------------- First Jacket Nozzle at Top (Shell) Start ------------------------------------------
-                    # print("First Jacket Nozzle at Top (Shell) Start")
-                    logger.info("Start: First Jacket Nozzle at Top (Shell)")
+                    # NOTE: This block processes BOTH N16 and N15 shell nozzles in sequence
+                    # Get N16 angle from item data if available, otherwise use default
+                    n16_degree = item.get("nozzle_degree", "28")
+                    n16_angle = -float(n16_degree)  # Negative for Inventor plane orientation
 
-                    # Create angled work plane for N16 nozzle
-                    shell_nozzle1_angled_plane = self._create_angled_plane(tg, main_assy_def, NOZZLE_N16_ANGLE, "N16_Plane")
+                    logger.info(f"Start: First Jacket Nozzle at Top (Shell) - N16 at {n16_degree} degrees")
+
+                    # Create angled work plane for N16 nozzle (dynamic degree)
+                    shell_nozzle1_angled_plane = self._create_angled_plane(tg, main_assy_def, n16_angle, "N16_Plane")
 
                     # Add Sketch
                     shell_jacket_nozzle1_sketch = main_assy_def.Sketches.Add(shell_nozzle1_angled_plane)
@@ -2260,11 +2296,14 @@ class Inventor:
                     # ------------------------------ Second Jacket Nozzle at Top (Shell) Finish ------------------------------------------------------------
 
                 elif item.get("component") == 'jacketnozzle_n17_btm':
+                    # NOTE: This block processes BOTH N11 and N17 bottom nozzles in sequence
+                    # N11 is processed first, N17 is processed second
+                    # The item contains N17's data, so use default constant for N11
                     logger.info("Start: jacketnozzle_n17_btm")
                     # ------------------------------ Third Jacket Nozzle at Bottom Start ------------------------------------------------------------
-                    logger.info("Start: Third Jacket Nozzle at Bottom")
-                    
-                    # Create angled work plane for N11 nozzle
+                    logger.info("Start: Third Jacket Nozzle at Bottom (N11)")
+
+                    # Create angled work plane for N11 nozzle (uses default constant since item is for N17)
                     bottom_nozzle1_angled_plane = self._create_angled_plane(tg, main_assy_def, NOZZLE_N11_ANGLE, "N11_Plane")
 
                     bottom_jacket_nozzle3_sketch = main_assy_def.Sketches.Add(main_assy_def.WorkPlanes["XZ Plane"])

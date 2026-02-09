@@ -14,11 +14,19 @@ class Vault:
             saved_file_paths = []
             headers = {'Content-Type': 'application/json'}
             
-            # Build itemcode → subcomponent lookup
-            subcomponent_map = {
-                item["itemcode"]: item.get("sub_components")
-                for item in item_codes
-            }
+            # Build component → original item lookup (preserves all fields)
+            # Use component name as key since multiple components can share the same itemcode
+            # (e.g., jacket nozzles N16 and N15 use same part but different positions)
+            # Handle both 'comp' (what generation_service sends) and 'component' (what vault API might return)
+            item_lookup_by_comp = {}
+            item_lookup_by_code = {}
+            for item in item_codes:
+                comp_name = item.get("comp") or item.get("component", "")
+                if comp_name:
+                    item_lookup_by_comp[comp_name.lower()] = item
+                itemcode = item.get("itemcode", "")
+                if itemcode:
+                    item_lookup_by_code[itemcode] = item
 
             response = requests.post(find_components_uri, json={"items": item_codes}, headers=headers)
 
@@ -56,16 +64,26 @@ class Vault:
                     os.chmod(path, 0o666)
                     f.write(content)
 
-                
-                # Add subcomponent from original item_codes list
-                subcomponent = subcomponent_map.get(itemcode)
+
+                # Get original item data to preserve additional fields
+                # Try component name first (handles same itemcode for different components)
+                # Fall back to itemcode lookup
+                comp_key = (component or "").lower()
+                original_item = item_lookup_by_comp.get(comp_key, {})
+                if not original_item:
+                    original_item = item_lookup_by_code.get(itemcode, {})
 
                 saved_file_paths.append({
                     'id': idx + 1,
                     'component': component,
                     'itemcode': itemcode,
                     'filepath': path,
-                    'subcomponents': subcomponent
+                    'subcomponents': original_item.get("sub_components"),
+                    # Preserve nozzle metadata for dynamic handling
+                    'fastener_count': original_item.get("fastener_count"),
+                    'nozzle_size': original_item.get("nozzle_size"),
+                    'nozzle_degree': original_item.get("nozzle_degree"),
+                    'nozzle_location': original_item.get("nozzle_location"),
                 })
 
             return saved_file_paths
