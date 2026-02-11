@@ -53,6 +53,7 @@ def get_fastener_count(nozzle_size: str) -> int:
     return FASTENER_COUNT_BY_SIZE.get(size, 8)  # Default to 8
 
 # Component type priority for assembly order
+# Must match dependency chain: manhole → coc → center_nozzle → drive → vessel nozzles
 COMPONENT_TYPE_PRIORITY = {
     "monoblock": 0,
     "jacket": 1,
@@ -60,10 +61,13 @@ COMPONENT_TYPE_PRIORITY = {
     "sidebracket": 3,
     "earthing": 4,
     "jacket_nozzle": 5,
-    "manhole": 6,           # N1 (special handling)
-    "drive_assembly": 7,
-    "vessel_nozzle": 8,     # N2-N10+ (any number)
-    "accessory": 9,
+    "manhole": 6,           # size=500 (special handling)
+    "manhole_accessory": 7, # mhcclamp, springbalanceassembly (depend on manhole)
+    "coc": 8,               # coc_gasket, coc, bfcclamp (depend on manhole)
+    "center_nozzle": 9,     # degree=d (depends on coc)
+    "drive_assembly": 10,   # driveassembly, shaftclosure, mechanical_seal_*, agitator
+    "vessel_nozzle": 11,    # any number of nozzles
+    "accessory": 12,        # remaining accessories
 }
 
 # Fitting sub-priority within a nozzle (assembly sequence)
@@ -73,37 +77,50 @@ FITTING_SUB_PRIORITY = {
     "blind_cover": 2,
     "baffle": 2,
     "toughened_glass": 2,
-    "sight_light_glass_flange": 2,
     "manhole_protection_ring": 2,
-    "bolt_stud": 3,
-    "bolt/stud": 3,
-    "washer": 4,
-    "nut": 5,
+    "sight_light_glass_flange": 3,   # Must be AFTER toughened_glass (needs toughened_glass_xz_proxy)
+    "bolt_stud": 4,
+    "washer": 5,
+    "nut": 6,
 }
 
-# Drive assembly sub-components order
+# Drive assembly sequence and sub-components order
+# Top-level sequence: driveassembly → shaftclosure → mechanical_seal → agitator
+# Sub-components are internal parts of driveassembly (higher priority numbers)
 DRIVE_ASSEMBLY_PRIORITY = {
-    "drivebasering": 0,
-    "drive_base_ring": 0,
-    "padplate": 1,
-    "pad_plate": 1,
-    "lanternsupport": 2,
-    "lantern_support": 2,
-    "lanternguard": 3,
-    "lantern_guard": 3,
-    "agitatorgear_coupling": 4,
-    "agitator_gear_coupling": 4,
-    "adaptorgearbox": 5,
-    "adapter_gearbox_model": 5,
+    "driveassembly": 0,
+    "drive_assembly": 0,
+    "shaftclosure": 1,
+    "shaft_closure": 1,
+    "mechanical_seal_washer": 2,
+    "mechanical_seal_fastener": 3,
+    "agitator": 4,
+    # Sub-components of drive assembly (internal parts)
+    "drivebasering": 10,
+    "drive_base_ring": 10,
+    "padplate": 11,
+    "pad_plate": 11,
+    "lanternsupport": 12,
+    "lantern_support": 12,
+    "lanternguard": 13,
+    "lantern_guard": 13,
+    "agitatorgear_coupling": 14,
+    "agitator_gear_coupling": 14,
+    "adaptorgearbox": 15,
+    "adapter_gearbox_model": 15,
 }
 
-# Nozzle name pattern to identify vessel nozzles
-VESSEL_NOZZLE_PATTERN = re.compile(r'^n(\d+)_', re.IGNORECASE)
-MANHOLE_PATTERN = re.compile(r'^n1_', re.IGNORECASE)
+# Pattern to identify jacket nozzles (still uses jacketnozzle_ prefix)
 JACKET_NOZZLE_PATTERN = re.compile(r'^jacketnozzle_', re.IGNORECASE)
 
 def classify_component(component_name: str) -> str:
-    """Classify a component by its type based on naming patterns."""
+    """Classify a component by its type based on naming patterns.
+
+    Nozzle classification is property-based using the nozzle_ prefix:
+    - nozzle_{size}_{degree}_{fitting} where size=500 → manhole
+    - nozzle_{size}_d_{fitting} (degree=d) → center_nozzle
+    - nozzle_{size}_{degree}_{fitting} (otherwise) → vessel_nozzle
+    """
     name = component_name.lower().strip()
 
     # Exact matches first
@@ -118,27 +135,40 @@ def classify_component(component_name: str) -> str:
     if name == "earthing":
         return "earthing"
 
-    # Pattern matches
+    # Jacket nozzle pattern (still uses jacketnozzle_ prefix)
     if JACKET_NOZZLE_PATTERN.match(name):
         return "jacket_nozzle"
-    if MANHOLE_PATTERN.match(name):
-        return "manhole"
-    if VESSEL_NOZZLE_PATTERN.match(name):
-        return "vessel_nozzle"
 
-    # Drive assembly components
-    if name in ("driveassembly", "drive_assembly"):
+    # Nozzle classification by parsed properties (name-independent)
+    if name.startswith("nozzle_"):
+        parts = name.split("_")
+        if len(parts) >= 3:
+            size = parts[1]
+            degree = parts[2]
+            if size == "500":
+                return "manhole"
+            if degree in ('d', '-', '', 'none'):
+                return "center_nozzle"
+            return "vessel_nozzle"
+
+    # Manhole accessories (depend on manhole_cover)
+    if name in ("mhcclamp", "mhc_clamp", "springbalanceassembly"):
+        return "manhole_accessory"
+
+    # COC group (coc_gasket → coc → bfcclamp, center_nozzle depends on coc)
+    if name in ("coc_gasket", "coc", "bfcclamp", "bf_c_clamp"):
+        return "coc"
+
+    # Drive assembly components (after center_nozzle)
+    if name in ("driveassembly", "drive_assembly", "shaftclosure", "shaft_closure",
+                "agitator", "mechanical_seal_washer", "mechanical_seal_fastener"):
         return "drive_assembly"
     for key in DRIVE_ASSEMBLY_PRIORITY:
         if key in name:
             return "drive_assembly"
 
-    # Accessories
-    if name in ("coc", "bfcclamp", "bf_c_clamp", "mhcclamp", "mhc_clamp",
-                "sensor", "agitator", "shaftclosure", "shaft_closure",
-                "gearbox", "motor", "nameplatebracket", "name_plate_bracket",
-                "springbalanceassembly", "coc_gasket", "mechanical_seal_washer",
-                "mechanical_seal_fastener"):
+    # Remaining accessories
+    if name in ("sensor", "gearbox", "motor", "nameplatebracket", "name_plate_bracket"):
         return "accessory"
     if name.startswith("airvent"):
         return "accessory"
@@ -146,25 +176,32 @@ def classify_component(component_name: str) -> str:
     return "accessory"  # Default
 
 def extract_degree(component_name: str) -> int:
-    """Extract degree value from component name like 'n2_150_60_split_flange'."""
+    """Extract degree value from component name like 'nozzle_150_60_split_flange'.
+
+    New pattern: nozzle_{size}_{degree}_{fitting}[_{id}]
+    Degree is at index 2 (after 'nozzle' and size).
+    """
     parts = component_name.lower().split('_')
-    # Pattern: nX_size_degree_fitting or nX_size_D_fitting (D = no degree)
-    if len(parts) >= 3:
+    # New pattern: nozzle_size_degree_fitting
+    if parts[0] == 'nozzle' and len(parts) >= 3:
+        degree_str = parts[2]
+        if degree_str in ('d', '-', '', 'none'):
+            return 0
         try:
-            degree_str = parts[2]
-            if degree_str == 'd':  # 'D' means no degree specified
-                return 0
             return int(degree_str)
         except ValueError:
             return 0
     return 0
 
 def extract_fitting(component_name: str) -> str:
-    """Extract fitting type from component name like 'n2_150_60_split_flange_1'."""
+    """Extract fitting type from component name like 'nozzle_150_60_split_flange_1'.
+
+    New pattern: nozzle_{size}_{degree}_{fitting}[_{id}]
+    Fitting parts start at index 3 (after 'nozzle', size, degree).
+    """
     parts = component_name.lower().split('_')
-    # Pattern: nX_size_degree_fitting[_id] or nX_size_D_fitting[_id]
-    if len(parts) >= 4:
-        # Join parts after degree, excluding trailing ID number
+    # New pattern: nozzle_size_degree_fitting[_id]
+    if parts[0] == 'nozzle' and len(parts) >= 4:
         fitting_parts = parts[3:]
         # Remove trailing numeric ID if present
         if fitting_parts and fitting_parts[-1].isdigit():
@@ -180,20 +217,31 @@ def get_dynamic_priority(component_name: str) -> tuple:
     comp_type = classify_component(component_name)
     type_priority = COMPONENT_TYPE_PRIORITY.get(comp_type, 100)
 
-    # For nozzles: sort by degree, then by fitting type
-    if comp_type in ("vessel_nozzle", "manhole"):
+    # For manhole: preserve original JSON fittings order via entry_id tiebreaker.
+    # Manhole has complex interleaved order (gasket → ring → gasket → cover)
+    # that can't be expressed by fitting_priority alone.
+    if comp_type == "manhole":
+        degree = extract_degree(component_name)
+        return (type_priority, degree, 0)
+
+    # For vessel/center nozzles: sort by degree, then by fitting type
+    if comp_type in ("vessel_nozzle", "center_nozzle"):
         degree = extract_degree(component_name)
         fitting = extract_fitting(component_name)
         fitting_priority = FITTING_SUB_PRIORITY.get(fitting, 10)
         return (type_priority, degree, fitting_priority)
 
     # For drive assembly: use sub-component order
+    # Match longest key first to avoid "agitator" matching "agitator_gear_coupling"
     if comp_type == "drive_assembly":
         name_lower = component_name.lower()
+        best_match = None
+        best_priority = 100
         for key, priority in DRIVE_ASSEMBLY_PRIORITY.items():
-            if key in name_lower:
-                return (type_priority, priority, 0)
-        return (type_priority, 100, 0)
+            if key in name_lower and (best_match is None or len(key) > len(best_match)):
+                best_match = key
+                best_priority = priority
+        return (type_priority, best_priority, 0)
 
     return (type_priority, 0, 0)
 
@@ -339,11 +387,11 @@ class Generation:
                                 fitemcode = fitting.get('itemCode', '')
                                 fdrawing = fitting.get('drawingNumber', '')
 
-                                # Construct component name
+                                # Construct component name (name-independent)
                                 if degree in ('', '-', None):
-                                    comp_name_full = f"{nozzle_no}_{size}_{fname}"
+                                    comp_name_full = f"nozzle_{size}_d_{fname}"
                                 else:
-                                    comp_name_full = f"{nozzle_no}_{size}_{degree}_{fname}"
+                                    comp_name_full = f"nozzle_{size}_{degree}_{fname}"
 
                                 fitting_comp = normalize_name(comp_name_full)
 
@@ -803,7 +851,8 @@ class Generation:
         id_counter = 1
 
         def make_entry(comp, itemcode, drawing_number, member="", subs=[],
-                       fastener_count=None, nozzle_size=None, nozzle_degree=None, nozzle_location=None):
+                       fastener_count=None, nozzle_size=None, nozzle_degree=None, nozzle_location=None,
+                       gasket_offset=None):
             nonlocal id_counter
             entry = {
                 "id": id_counter,
@@ -822,6 +871,8 @@ class Generation:
                 entry["nozzle_degree"] = nozzle_degree
             if nozzle_location is not None:
                 entry["nozzle_location"] = nozzle_location
+            if gasket_offset is not None:
+                entry["gasket_offset"] = gasket_offset
             id_counter += 1
             return entry
 
@@ -887,14 +938,22 @@ class Generation:
                     fastener_count = get_fastener_count(size)
 
                     fittings = nozzle.get("fittings", [])
+                    # Check if this nozzle has toughened_glass (sight glass nozzle)
+                    has_sight_glass = any(
+                        'toughened_glass' in f.get('name', '').lower().replace('/', ' ').replace(' ', '_')
+                        for f in fittings
+                    )
                     for fit in fittings:
-                        member = fit.get("name", "").lower().replace(" ", "_")
+                        member = fit.get("name", "").lower().replace("/", " ").replace(" ", "_")
                         drawing = fit.get("drawingNumber")
                         itemcode = fit.get("itemCode")
                         fit_id = fit.get("id", 1)
 
-                        # FITTING comp → n1_500_gasket_1
-                        comp_id = f"{nozzle_name}_{size}_{degree}_{member}_{fit_id}"
+                        # FITTING comp → nozzle_500_0_gasket_1 (name-independent)
+                        comp_id = f"nozzle_{size}_{degree}_{member}_{fit_id}"
+
+                        # Sight glass nozzles use gasket offset 2.0 (others use default 2.2)
+                        g_offset = 2.0 if (has_sight_glass and 'gasket' in member) else None
 
                         # Add fitting entry with nozzle metadata
                         results.append(make_entry(
@@ -905,18 +964,19 @@ class Generation:
                             subs=[],
                             fastener_count=fastener_count,
                             nozzle_size=size,
-                            nozzle_degree=degree
+                            nozzle_degree=degree,
+                            gasket_offset=g_offset
                         ))
 
                     # FASTENERS - include fastener_count for circular pattern
                     fasteners = nozzle.get("fasteners", [])
                     for fast in fasteners:
-                        fast_name = fast.get("name", "").lower().replace(" ", "_")
+                        fast_name = fast.get("name", "").lower().replace("/", " ").replace(" ", "_")
                         fast_draw = fast.get("drawingNumber")
                         fast_item = fast.get("itemCode")
 
-                        # FASTENER comp → n1_500_bolt (NO member here)
-                        fast_comp_id = f"{nozzle_name}_{size}_{degree}_{fast_name}"
+                        # FASTENER comp → nozzle_500_0_bolt/stud (name-independent)
+                        fast_comp_id = f"nozzle_{size}_{degree}_{fast_name}"
 
                         results.append(make_entry(
                             fast_comp_id,
@@ -1021,6 +1081,12 @@ class Generation:
 
             # --- COC ---
             if comp_name == "coc":
+                # Emit coc_gasket alongside coc (previously hardcoded insert)
+                results.append(make_entry(
+                    "coc_gasket",
+                    "T1-0104",
+                    ""
+                ))
                 results.append(make_entry(
                     "coc",
                     config.get("item_code"),
@@ -1052,6 +1118,17 @@ class Generation:
                     "shaftclosure",
                     config.get("item_code"),
                     config.get("drawing_number")
+                ))
+                # Emit mechanical seal components alongside shaftclosure (previously hardcoded inserts)
+                results.append(make_entry(
+                    "mechanical_seal_washer",
+                    "13WS0013",
+                    ""
+                ))
+                results.append(make_entry(
+                    "mechanical_seal_fastener",
+                    "13CS0237",
+                    ""
                 ))
                 continue
 
@@ -1133,9 +1210,6 @@ class Generation:
         standard_model = self.build_standard_model(data=components)
         components_details = self.extract_component_data(data=standard_model)
         results = sorted(components_details, key=self.sort_key)
-        results.insert(67, {'id':21, 'comp': 'coc_gasket', 'partnumber': '', 'member': '', 'itemcode':'T1-0104', 'sub_components': []})
-        results.insert(73, {'id':27, 'comp': 'mechanical_seal_washer', 'partnumber': '', 'member': '', 'itemcode':'13WS0013', 'sub_components': []})
-        results.insert(74, {'id':28, 'comp': 'mechanical_seal_fastener', 'partnumber': '', 'member': '', 'itemcode':'13CS0237', 'sub_components': []})
 
         downloaded_components_files = self.vault.find_files_by_item_codes(item_codes=results)
         is_generated = self.inventor.generate(components=downloaded_components_files, model_details=model_details)
