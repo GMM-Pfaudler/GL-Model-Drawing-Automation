@@ -84,6 +84,7 @@ class Vault:
                     'nozzle_size': original_item.get("nozzle_size"),
                     'nozzle_degree': original_item.get("nozzle_degree"),
                     'nozzle_location': original_item.get("nozzle_location"),
+                    'gasket_offset': original_item.get("gasket_offset"),
                 })
 
             return saved_file_paths
