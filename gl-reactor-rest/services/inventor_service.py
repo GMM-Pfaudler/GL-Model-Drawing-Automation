@@ -650,15 +650,17 @@ class Inventor:
         """
         axis_names = axis_names or ["Fastener Assly Axis", "Fastner Assly Axis"]
 
+        # Search each name across parent → sub before trying next name
+        # This matches old static code behavior: correct spelling on parent/sub first
         for axis_name in axis_names:
+            # Try parent occurrence
             axis = self.get_work_axis(work_axes=occurrence.Definition.WorkAxes, axis_name=axis_name)
             if axis is not None:
                 return occurrence.CreateGeometryProxy(axis)
 
-        # Try sub-occurrences
-        if hasattr(occurrence, "SubOccurrences") and occurrence.SubOccurrences.Count > 0:
-            sub_occ = occurrence.SubOccurrences.Item(1)
-            for axis_name in axis_names:
+            # Try sub-occurrence
+            if hasattr(occurrence, "SubOccurrences") and occurrence.SubOccurrences.Count > 0:
+                sub_occ = occurrence.SubOccurrences.Item(1)
                 axis = self.get_work_axis(work_axes=sub_occ.Definition.WorkAxes, axis_name=axis_name)
                 if axis is not None:
                     return sub_occ.CreateGeometryProxy(axis)
@@ -1265,14 +1267,13 @@ class Inventor:
                 self._add_mate_constraint(main_assy_def, gasket_y_axis, y_axis_proxy)
             if split_flange_xy:
                 if 'blind_cover' in fitting:
-                    nozzle_size_int = int(nozzle_size) if nozzle_size.isdigit() else 0
-                    if nozzle_size_int <= 200:
-                        # 150mm blind covers need 22.5° rotation to align bolt holes
-                        main_assy_def.Constraints.AddAngleConstraint(
-                            split_flange_xy, xy_plane_proxy, '22.5 deg', 78593, None, None, None)
-                    else:
-                        # 250mm+ blind covers use flush alignment (no rotation needed)
-                        self._add_flush_constraint(main_assy_def, split_flange_xy, xy_plane_proxy)
+                    # Blind cover bolt holes are offset from split flange XY reference
+                    # by half a bolt spacing. Rotation = 360 / (2 * fastener_count).
+                    from services.generation_service import FASTENER_COUNT_BY_SIZE
+                    fc = FASTENER_COUNT_BY_SIZE.get(nozzle_size, 8)
+                    half_angle = 360 / (2 * fc)
+                    main_assy_def.Constraints.AddAngleConstraint(
+                        split_flange_xy, xy_plane_proxy, f'{half_angle} deg', 78593, None, None, None)
                 else:
                     # Baffle: flush alignment
                     self._add_flush_constraint(main_assy_def, split_flange_xy, xy_plane_proxy)
@@ -1334,6 +1335,8 @@ class Inventor:
             cover_xz = state.get('cover_xz_plane_proxy')
             cover_xy = state.get('cover_xy_plane_proxy')
             bolt_offset = state.get('bolt_offset', -1.8)
+            print(f"  [DEBUG] Fastener axis for {nozzle_key}: {fastener_axis}")
+            print(f"  [DEBUG] Cover XZ: {cover_xz}, Cover XY: {cover_xy}, bolt_offset: {bolt_offset}")
 
             if fastener_axis:
                 self._add_mate_constraint(main_assy_def, y_axis_proxy, fastener_axis)
@@ -1395,6 +1398,8 @@ class Inventor:
             washer = state.get('washer')
             pattern_axis = state.get('cover_y_axis_proxy', state.get('y_axis_proxy'))
             fastener_count = config.get('fastener_count', 8)
+            print(f"  [DEBUG] Pattern axis: {pattern_axis}, Fastener count: {fastener_count}")
+            print(f"  [DEBUG] Washer fastener plane: {state.get('washer_fastener_plane')}")
 
             if bolt and washer and pattern_axis:
                 try:
